@@ -244,9 +244,10 @@ export class Txexplosion extends Entity {
 
 			if ( this.type == 3 ) {
 
+				this.parent.sounds["runmeme"].playOnce();
 				attacktarget.haszombievirus = 1;
 				attacktarget.die();
-				
+
 
 			} else {			
 				

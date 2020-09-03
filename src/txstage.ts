@@ -106,7 +106,7 @@ export class Txstage extends Entity {
    
 
     public cards_dealt_in_game = 8;
-    public monster_cycle_wait_time = 10;
+    public monster_cycle_wait_time = 300;
 
     public scoreboard;
 
@@ -227,6 +227,9 @@ export class Txstage extends Entity {
         this.init_MessageBus();
         this.init_pathfinder();
         this.update_button_ui();
+        this.preload_glb();
+        this.reset_game();
+
 
         this.debug();
 
@@ -261,9 +264,7 @@ export class Txstage extends Entity {
     debug( ) {
 
 
-        this.debugsetting = 1;
-
-
+        this.debugsetting = 0;
 
 
 
@@ -302,14 +303,11 @@ export class Txstage extends Entity {
 
 
             
-            this.sounds["medieval"].stop();
-            this.sounds["warhorn"].playOnce();
-
+            
             let i, j;
               
             this.game_state = 1;
             this.game_mode  = 1;
-            this.life_remaining = 20;
 
 
 
@@ -413,17 +411,7 @@ export class Txstage extends Entity {
             
             if ( this.game_mode == 1 && this.game_state == 1  ) {
                 
-                if ( this.release_monster_tick > 0 ) {
-
-                    if ( this.release_monster_tick % 10 == 0 && this.release_monster_count < this.get_monster_count_by_wave() ) {
-
-                        let monster_type = this.get_monster_type_by_wave();
-                        this.queue_command( [ "spawnUnit", monster_type , -7.3 + Math.random() * 0.05 , Math.random() - 0.5 , -1 ] );
-
-                        this.release_monster_count += 1;
-                    }
-                    this.release_monster_tick -= 1; 
-                }
+                
 
 
             } else if ( this.game_mode == 2 && this.game_state == 1 ) {
@@ -473,7 +461,7 @@ export class Txstage extends Entity {
     //-----------
     update_mana() {
 
-        this.uitxt_mana.value = "Mana : " + this.current_mana ;
+        this.uitxt_mana.value = "Balance $ : " + this.current_mana ;
     
     }
 
@@ -481,13 +469,14 @@ export class Txstage extends Entity {
     //-----------
     update_score() {
 
+        /*
         if ( this.life_remaining >= 10 ) {
             this.uitxt_life.positionX = -58;    
         } else {
             this.uitxt_life.positionX = -54;
         }
         this.uitxt_life.value = this.life_remaining;
-
+        */
     }
 
     update_time() {
@@ -504,17 +493,6 @@ export class Txstage extends Entity {
                     this.time_remaining -= 1;
                 } else {
 
-                    
-                    this.release_monster_count = 0;
-                    this.release_monster_tick = 150;
-                    
-                    this.current_wave += 1;
-                    this.time_remaining = this.monster_cycle_wait_time;
-
-                    if ( this.current_wave > 100 ) {
-                        this.endgame();
-                    }
-
                 }
             }
 
@@ -525,8 +503,8 @@ export class Txstage extends Entity {
             if ( (seconds_rem).toString().length == 1 ) {
                 zeropad = "0";
             }
-            this.uitxt_time.value = "Wave " + (this.current_wave + 1) + " to be released in :" +  minutes_rem + ":" + zeropad +  seconds_rem 
-        
+            this.uitxt_time.value = "Time Remaining : " + minutes_rem + ":" + zeropad +  seconds_rem 
+                    
         
             
         }
@@ -797,7 +775,7 @@ export class Txstage extends Entity {
 
                                 }
                             } else {
-                                this.uitxt_instruction.value = "Not enough mana";
+                                this.uitxt_instruction.value = "Not enough cash";
                                 this.sounds["denied"].playOnce();
 
                             }
@@ -925,7 +903,7 @@ export class Txstage extends Entity {
 
 
                 } else {
-                    this.uitxt_instruction.value = "Not enough mana";
+                    this.uitxt_instruction.value = "Not enough cash";
                     this.sounds["denied"].playOnce();
                 }
             }
@@ -946,12 +924,12 @@ export class Txstage extends Entity {
             }
         } else {
 
-
             this.animate_button_tick = 20;
             this.animate_button_callback_id = id;
             this.animate_button_userdata = userData;
             this.sounds["buttonclick"].playOnce();
 
+            
         }
 
    }
@@ -986,12 +964,7 @@ export class Txstage extends Entity {
             if ( this.animate_button_tick > 0 ) {
 
                 if ( this.animate_button_callback_id == "battlebegin" ) {
-                        
-                    let animate_delta = 40 - this.animate_button_tick;
-                    this.uiimg_redflag.positionX   = -100 + animate_delta * 40;
-                    this.uiimg_blueflag.positionX  =  100 - animate_delta * 40;
-                    this.uitxt_instruction.fontSize = 80 - animate_delta  * 2 ;
-                    this.ui3d_root.getComponent( Transform ).position.y = -999;      
+                    this.ui3d_root.getComponent( Transform ).position.y = 5.5;      
                 } else {
                     this.ui3d_root.getComponent( Transform ).position.y -= 0.75;
                 }
@@ -1002,11 +975,6 @@ export class Txstage extends Entity {
 
                 if ( this.animate_button_callback_id == "battlebegin" ) {
                     
-                    this.uiimg_redflag.visible = false;
-                    this.uiimg_blueflag.visible = false;
-                    this.uiimg_redflag.positionX   = -100;
-                    this.uiimg_blueflag.positionX  =  100;
-                    this.uitxt_instruction.fontSize = 16;
                     this.uitxt_instruction.value = "";
 
                 } 
@@ -1047,12 +1015,16 @@ export class Txstage extends Entity {
             this.game_mode = 1;
             this.menu_page = 2;
             this.update_button_ui();
-            this.sounds["warhorn"].playOnce();
+            
+
             this.animate_button_callback_id = "battlebegin";
-            this.animate_button_tick = 40;
-            this.uiimg_redflag.visible = true;
-            this.uiimg_blueflag.visible = true;
-            this.uitxt_instruction.value = "Start";
+            this.animate_button_tick = 150;
+            //this.uiimg_redflag.visible = true;
+            //this.uiimg_blueflag.visible = true;
+            this.uitxt_instruction.value = "(Public Service Announcement..)";
+            
+            this.sounds["attention"].playOnce();
+           
 
 
         } else if ( id == "multiplayer" ) {
@@ -1149,8 +1121,7 @@ export class Txstage extends Entity {
                 this.update_button_ui();
 
 
-                this.sounds["warhorn"].playOnce();
-
+                
                 this.animate_button_callback_id = "battlebegin";
                 this.animate_button_tick = 40;
 
@@ -1171,12 +1142,9 @@ export class Txstage extends Entity {
             this.menu_page  = 0;
             
             
-            this.sounds["medieval"].stop();
-            this.sounds["wardrum"].playOnce();
-            this.current_mana = 80;
-
             this.update_button_ui();
 
+            this.init_inmates();
             
                     
 
@@ -1196,8 +1164,6 @@ export class Txstage extends Entity {
             this.menu_labels["lbl2"].getComponent( Transform ).position.y = 3.9;
             this.menu_labels["lbl3"].getComponent( Transform ).position.y = 3.55;
             
-            this.sounds["wardrum"].stop();
-            this.sounds["medieval"].playOnce();
             
             if ( this.game_mode == 2 ) {
 
@@ -1265,7 +1231,7 @@ export class Txstage extends Entity {
 
             this.uiimg_selected_card.source = txcard.getComponent(Material).albedoTexture;
             this.uiimg_selected_card.visible = true;
-            this.uitxt_selected_card_mana.value = txcard.manaCost;
+            this.uitxt_selected_card_mana.value = "$" + txcard.manaCost;
 
             this.uitxt_instruction.value = "";
             
@@ -1568,7 +1534,7 @@ export class Txstage extends Entity {
 
         if ( cmd_arr[0] == "spawnUnit" ) {
 
-            let spawn_absolute_tick = this.globaltick + 15;
+            let spawn_absolute_tick = this.globaltick + 50;
             cmd_arr[5] = spawn_absolute_tick ;          
 
             //log( "spawn_absolute_tick ", cmd_arr[1] , spawn_absolute_tick );
@@ -1600,7 +1566,7 @@ export class Txstage extends Entity {
         
         this.time_remaining = this.monster_cycle_wait_time;
         this.life_remaining = 20;    
-        this.current_mana   = 80;
+        this.current_mana   = 10;
         this.current_wave   =  0;
         this.release_monster_count = 0;
 
@@ -1650,8 +1616,7 @@ export class Txstage extends Entity {
     // Bookmark endgame
     endgame( ) {
     
-        this.sounds["endgame"].playOnce();
-
+    
         this.game_state = 2;
         let final_txt = "Game Over.\n";
 
@@ -1872,86 +1837,14 @@ export class Txstage extends Entity {
 
     //-----------
     unit_on_die( unit ) {
-        
-        if ( this.game_state == 1 ) {
-
-            if ( unit.owner == -1 ) {
-            
-                if ( unit.type == "giant" ) {
-                    this.current_mana += 40;
-
-
-                } else if ( unit.type == "prince" ) {
-                    this.current_mana += 50;
-
-                } else if ( unit.type == "pekka" ) {
-                
-                    this.current_mana += 60;    
-
-                } else if ( unit.type == "gargoyle" ) {
-                
-                    this.current_mana += 40;    
-                
-                } else if ( unit.type == "hogrider") {
-                    this.current_mana += 20;
-
-
-
-                } else if ( unit.type == "knight" ) {
-                    this.current_mana += 4;
-
-                } else if ( unit.type == "archer" ) {
-
-                    this.current_mana += 3;
-
-
-              
-
-                } else {
-                    this.current_mana += 2;
-                }
-            }
-            
-            if ( this.current_selected_unit == unit ) {
-                // If currently selected unit dies...
-                this.animate_button_tick = 20;
-                this.animate_button_callback_id = "cancel";
-                this.current_selected_unit = null;
-                this.current_selected_unit_highlight.getComponent( PlaneShape).visible = false;
-                this.current_selected_unit_highlight.getComponent( Transform ).position.y = -999;
-            }
-
-            if ( unit.owner == 1 ) {
-                
-                let u_tile_x = Math.round( ( unit.transform.position.x  ) / this.grid_size_x ) >> 0 ;
-                let u_tile_z = Math.round( ( unit.transform.position.z  ) / this.grid_size_z ) >> 0 ;
-
-                let node = this.pathfinder.getNode( u_tile_x , u_tile_z );
-                if ( node != null ) {
-                    node["walkable"] = 1;
-                    this.pathfinder.findPath( -7 , 0,  7 , 0 ) ;
-                }
-            }
-        }   
+         
     }
 
 
 
     //------------
     unit_on_finish( unit ) {
-        
-        if ( this.game_state == 1 ) {
-            if ( unit.owner == -1 ) {
-
-
-                this.life_remaining -= 1;
-                this.update_score();
-
-                if ( this.life_remaining <= 0 ) {
-                    this.endgame();
-                }
-            }
-        }
+         
     }
 
 
@@ -1959,90 +1852,14 @@ export class Txstage extends Entity {
 
 
 
-    //-----------------------------
-    get_monster_type_by_wave( ) {
+    init_inmates() {
         
-        let monster_type = "skeleton";
-        if ( this.current_wave  % 10 == 1 ) {
-            monster_type = "skeleton";
-
-        } else if ( this.current_wave % 10 == 2 ) {
-            monster_type = "goblin";
-        
-
-        } else if ( this.current_wave % 10 == 3 ) {
-            monster_type = "skeleton";
-        
-
-        } else if ( this.current_wave % 10 == 4 ) {
-            monster_type = "goblin";
-        
-        
-        } else if ( this.current_wave % 10 == 5 ) {
-            monster_type = "hogrider";
-        
-
-        
-        } else if ( this.current_wave % 10 == 6 ) {
-            monster_type = "knight";
-            
-        
-        } else if ( this.current_wave % 10 == 7 ) {
-            monster_type = "archer";
-        
-        
-        } else if ( this.current_wave % 10 == 8 ) {
-            monster_type = "gargoylehorde";
-        
-        
-        } else if ( this.current_wave % 10 == 9 ) {
-            monster_type = "goblinspear";
-        
-        } else if ( this.current_wave % 10 == 0 ) {
-
-            if ( this.current_wave % 50 == 10 ) { 
-                monster_type = "giant";
-            } else if ( this.current_wave % 50 == 20 ) {
-                monster_type = "prince";
-            } else if ( this.current_wave % 50 == 30 ) {
-                monster_type = "pekka" ;
-            } else if ( this.current_wave % 50 == 40 ) {
-                monster_type = "gargoyle" ;
-            } else if ( this.current_wave % 50 == 0 ) {
-                monster_type = "pekka" ;
-            }
-
+        let i;
+        for ( i = 0 ; i < 15 ; i++ ) {
+            this.queue_command( [ "spawnUnit", "inmate" , Math.random() * 12 - 6 , Math.random() * 12 - 6 , -1 ] );
         }
 
-
-
-        return monster_type;
     }
-
-
-    //-----------------------------
-    get_monster_count_by_wave() {
-
-        let monster_count = 40;
-        
-        // Boss
-        if ( this.current_wave % 5 == 0 ) {
-            monster_count = 2;
-        }
-        if ( this.current_wave % 10 == 0 ) {
-            monster_count = 1;
-        }
-
-        if ( this.current_wave == 50 ) {
-            monster_count = 5;
-        }
-
-        return monster_count;
-    }
-
-
-
-
 
 
 
@@ -2086,7 +1903,7 @@ export class Txstage extends Entity {
     //-----------------------------------------------------------
     // Bookmark txcard
     public all_available_cards              = [ "spell_virus"  , "emptyblock"  ];
-    public all_available_cards_mana         = [            10  ,           2   ];
+    public all_available_cards_mana         = [             7  ,           1   ];
     public all_available_cards_isspell      = [             1  ,           0   ];
     public all_available_cards_modelname    = [             "" ,          ""   ];
     public all_available_cards_texturename  = [        "virus" , "emptyblock"  ];
@@ -2162,20 +1979,7 @@ export class Txstage extends Entity {
 
 
              // Pre-load so that later can visible faster.
-             
-            let preview_model = new Entity();
-            preview_model.setParent( this );
-            preview_model.addComponent( new Transform(
-                {
-                    position: new Vector3( 0, -999 , 0 ),
-                    scale   : new Vector3( 0.5,0.5,0.5)
-                }
-            ));
-            if ( modelname != "" ) {
-                preview_model.addComponent( resources.models[modelname] );
-            }
             
-
         }
 
        
@@ -2184,7 +1988,26 @@ export class Txstage extends Entity {
      }
 
 
+    //--------
+    //
+    public preload_glb_list = ["inmate", "zombieinmate"];
 
+    preload_glb() {
+
+        let i;
+        for (  i = 0 ; i < this.preload_glb_list.length ; i++ ) {
+            let preload_glb_model = new Entity();
+            preload_glb_model.setParent( this );
+            preload_glb_model.addComponent( new Transform(
+                {
+                    position: new Vector3( 0, -999 , 0 ),
+                    scale   : new Vector3( 0.5,0.5,0.5)
+                }
+            ));
+            let modelname = this.preload_glb_list[i];
+            preload_glb_model.addComponent( resources.models[modelname] );
+        }
+    }
 
 
 
@@ -2494,6 +2317,8 @@ export class Txstage extends Entity {
         let ui_2d_canvas = new UICanvas();
         //    ui_2d_canvas.height = 4000;
 
+
+        /*
         let ui_2d_image = new UIImage(ui_2d_canvas, resources.textures.heart );
         ui_2d_image.vAlign = "bottom";
 
@@ -2514,9 +2339,10 @@ export class Txstage extends Entity {
         ui_2d_text.positionX = -58;
         ui_2d_text.positionY =  12;
         this.uitxt_life = ui_2d_text;
+        */
 
-        
-        ui_2d_text = new UIText( ui_2d_canvas );
+
+        let ui_2d_text = new UIText( ui_2d_canvas );
         ui_2d_text.value = "3:00";
         ui_2d_text.vAlign = "bottom";
         ui_2d_text.fontSize = 16;
@@ -2554,7 +2380,7 @@ export class Txstage extends Entity {
 
         // Selected card 2d ui
 
-        ui_2d_image = new UIImage(ui_2d_canvas , resources.textures.giant );
+        let ui_2d_image = new UIImage(ui_2d_canvas , resources.textures.giant );
         ui_2d_image.vAlign = "bottom";
         ui_2d_image.hAlign = "left";
         
@@ -2731,9 +2557,9 @@ export class Txstage extends Entity {
         for ( snd in resources.sounds ) {
             this.sounds[snd]     = new Txsound(this, resources.sounds[snd] );
         }    
+        this.sounds["welcome"].playOnce();
 
-        this.sounds["wardrum"].playOnce();
-
+        
     }
 
 
@@ -3015,7 +2841,8 @@ export class Txstage extends Entity {
             explosion = this.explosions[recyclable_index];
             explosion.getComponent(Transform).position = location_v3;
             explosion.getComponent(Transform).scale.x    = scale_x ;
-            explosion.getComponent(Transform).scale.x    = scale_y ;
+            explosion.getComponent(Transform).scale.y    = scale_y ;
+            explosion.getComponent(Transform).scale.z    = scale_y ;
                 
             explosion.damage = damage;
             explosion.owner  = owner;
@@ -3034,7 +2861,7 @@ export class Txstage extends Entity {
                 this,
                 {
                     position: location_v3,
-                    scale   : new Vector3( scale_x, scale_y , 1 )
+                    scale   : new Vector3( scale_x, scale_y , scale_y )
                 },
                 material,
                 owner,
@@ -3356,10 +3183,10 @@ export class Txstage extends Entity {
                     wait_buffer
                 );
 
+            
        
         } else { 
-            let u = this.createUnit( type, x  , z , owner, wait_buffer );
-        	u.rage = 2;
+            this.createUnit( type, x  , z , owner, wait_buffer );
         }
         
     }
@@ -3446,6 +3273,7 @@ export class Txstage extends Entity {
             damage      = 7;
             maxhp       = 270;
             attackSpeed = 30;
+            aggrorange  = 1.0;
 
             speed       = 10;
 
@@ -3459,12 +3287,16 @@ export class Txstage extends Entity {
             b2dsize     = 0.15;
             model       = resources.models.zombieinmate;
 
-            damage      = 7;
-            maxhp       = 270;
+            damage      = 135;
+            maxhp       = 500;
+
+            aggrorange  = 1.5;
+
             attackSpeed = 30;
             attackRange = 0.4;
             speed       = 25;
     
+            this.sounds["zombieroar"].playOnce();
 
             
     	} else if ( type == "giant" ) {
@@ -3831,7 +3663,7 @@ export class Txstage extends Entity {
             unit.attacking    = 0;
             unit.healthbar.getComponent( Transform ).scale.x = 1.5;
 
-            unit.stopAnimation("Punch");
+            unit.stopAllClips();
             unit.playAnimation("Walking",1);
             
             unit.visible = 1;

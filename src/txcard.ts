@@ -121,10 +121,10 @@ export class Txcard extends Entity {
 		txtmanacost.addComponent( new Transform( 
 		{
 			position: new Vector3(0,0, 0.01),
-			scale  : new Vector3(0.5,0.5,0.5)
+			scale  : new Vector3(0.4,0.4,0.4)
 		}
 		));
-		txtmanacost.addComponent( new TextShape( (  this.manaCost  ) + "") );
+		txtmanacost.addComponent( new TextShape( (  "$" + this.manaCost  ) + "") );
 		txtmanacost.getComponent( TextShape ).color = Color3.White();
 		txtmanacost.getComponent( Transform ).rotation.eulerAngles = new Vector3( 180,0,0);
 

@@ -63,7 +63,6 @@ export default {
 	sounds: {
 		whoosh: new AudioClip("sounds/whoosh.mp3"),
 		explosion: new AudioClip("sounds/explosion.mp3"),
-		warhorn: new AudioClip("sounds/warhorn.mp3"),
 		electricshock: new AudioClip("sounds/electricshock.mp3"),
 		arrowshoot: new AudioClip("sounds/arrowshoot.mp3"),
 		arrowhit:new AudioClip("sounds/arrowhit.mp3"),
@@ -73,7 +72,6 @@ export default {
 		punch: new AudioClip("sounds/punch.mp3"),
 		destruction: new AudioClip("sounds/destruction.mp3"),
 		spawn: new AudioClip("sounds/spawn.mp3"),
-		endgame:new AudioClip("sounds/endgame.mp3"),
 		scream:new AudioClip("sounds/scream.mp3"),
 		buttonclick:new AudioClip("sounds/buttonclick.mp3"),
 		denied: new AudioClip("sounds/denied.mp3"),
@@ -81,10 +79,15 @@ export default {
 		gargoyle: new AudioClip("sounds/gargoyle.mp3"),
 		pig: new AudioClip("sounds/pig.mp3"),
 		burp:new AudioClip("sounds/burp.mp3"),
-		wardrum:new AudioClip("sounds/wardrum.mp3"),
-		medieval: new AudioClip("sounds/medieval.mp3"),
-		pop:new AudioClip("sounds/pop.mp3");
-		powerup:new AudioClip("sounds/powerup.mp3");
+		pop:new AudioClip("sounds/pop.mp3"),
+		powerup:new AudioClip("sounds/powerup.mp3"),
+		zombiedie:new AudioClip("sounds/zombiedie.mp3"),
+		zombieroar:new AudioClip("sounds/zombieroar.mp3"),
+		zombieattack:new AudioClip("sounds/zombieattack.mp3"),
+		runmeme:new AudioClip("sounds/runmeme.mp3"),
+		attention:new AudioClip("sounds/attention.mp3"),
+		welcome:new AudioClip("sounds/welcome.mp3")
+
 	}
 
 

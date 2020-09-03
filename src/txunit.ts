@@ -78,7 +78,10 @@ export class Txunit extends Entity {
 	public prevtilepostick = 0;
 
 	public haszombievirus = 0;
-	public beinghit = 0;
+	
+	public isPanic = 0;
+
+	public deadtick = 0;
 
 
 
@@ -276,10 +279,7 @@ export class Txunit extends Entity {
 			this.getComponent(Animator).addClip( new AnimationState("Run") );
 			
    			
-			this.stopAnimation("_idle");
-			this.stopAnimation("Punch");
-			this.stopAnimation("Die");
-			this.stopAnimation("Run");
+			this.stopAllClips();
 			this.playAnimation("Walking", 1 );
    			//log( this.id , "createAnimationStates" );	
 
@@ -323,40 +323,53 @@ export class Txunit extends Entity {
 
 					} else {
 						
-						if ( this.beinghit > 0 ) {
-							this.beinghit -= 1;
 						
-						} else {
-							if ( this.shapetype == "dynamic" ) {
+						if ( this.shapetype == "dynamic" ) {
 
-
-								if ( this.rage == 1 ) {
-									
-									// Rage mode =1 ,will attack any nearby enemy.
-									this.find_attack_target();
-									this.attack_target(dt);
-									if ( this.attacking == 0 ) {
-										this.find_move_target();
-										this.move_self( dt );
-
-									}
-
-								} else if ( this.rage == 2 ) {
-									// Rage mode =2 , will move randomly.
-									this.find_random_move_target();
-									this.move_self( dt );
-										
-
-
-								} else {
-									// Rage mode = 0 , will move according to pathfinder									
-									this.find_move_target();
-									this.move_along_path( dt );
+							if ( this.type == "zombieinmate") {
+								this.curhp -= 1;
+								this.refresh_hp();
+								if ( this.curhp <= 0 ) {
+									this.die();
+									return ;
 								}
-							}
+							}	
+
+							if ( this.rage == 1 ) {
+								
+								// Rage mode =1 ,will attack any nearby enemy.
+								this.find_attack_target();
+								this.attack_target(dt);
+								if ( this.attacking == 0 ) {
+									this.find_move_target();
+									this.move_self( dt );
+
+								}
+
+							} else if ( this.rage == 2 ) {
+
+								if ( this.isPanic > 0 ) {
+									this.isPanic -= 1;
+									if ( this.isPanic == 0 ) {
+										this.rage = 0;
+									}
+								}
+								// Rage mode =2 , panic run
+								this.find_random_move_target();
+								this.move_self( dt );
 							
-							this.updatePosition_toBox2d();
+
+							} else {
+
+								// Normal
+								this.check_zombie_around();
+								this.find_random_move_target();
+								this.move_self( dt );
+							}
 						}
+						
+						this.updatePosition_toBox2d();
+					
 					}
 				
 				}
@@ -385,6 +398,24 @@ export class Txunit extends Entity {
 	}
 
 
+
+	//---------
+	check_zombie_around() {
+
+		this.find_nearby_units( this.aggroRange );
+			
+		let i;
+		for ( i = 0 ; i < this.units_in_proximity.length ; i++ ) {
+
+			let u = this.units_in_proximity[i];
+			if ( u != null && u.dead == 0 && u.owner != this.owner && u.type == "zombieinmate" ) {
+				this.rage = 2;
+				this.isPanic = 100;
+			}
+		}
+	}
+
+
 	//----------------
 	die_and_rot() {
 		// Dead ones, move to below 
@@ -396,10 +427,7 @@ export class Txunit extends Entity {
 				u.transform.rotation.eulerAngles = this.transform.rotation.eulerAngles ;
 				u.rage = 1;
 
-				u.stopAnimation("Punch");
-				u.stopAnimation("Die");
-				u.stopAnimation("Walking");
-				u.stopAnimation("_idle");
+				u.stopAllClips();
 				u.playAnimation("Run", 1 );
 
 
@@ -408,20 +436,27 @@ export class Txunit extends Entity {
 				this.hide();
 
 			} else {
-
-				let dst       		=  this.transform.scale.y * -1;
-				let start_remaining =  this.visible_ypos - dst;
-				let remaining 		=  this.transform.position.y - dst;
-
-				if ( remaining > 0 ) {
-					this.transform.position.y -=  start_remaining / 100;
-				} else {
+				// Show dead body for at least 200 tick
+				if ( this.deadtick > 200 ) {
 					
-					this.dead = 2;
-					this.stopAllClips();
-					//this.getComponent(GLTFShape).visible = false;
-					this.hide();
-				}
+					let dst       		=  this.transform.scale.y * -1;
+					let start_remaining =  this.visible_ypos - dst;
+					let remaining 		=  this.transform.position.y - dst;
+
+					// show dead body slowly decays
+					if ( remaining > 0 ) {
+						this.transform.position.y -=  start_remaining / 100;
+					} else {
+						this.dead = 2;
+						this.stopAllClips();
+						this.hide();
+					}
+
+				} else {
+					this.deadtick += 1;
+				}	
+
+
 			}
 		}
 	}
@@ -474,8 +509,13 @@ export class Txunit extends Entity {
 	    		
 	    		var rad	 = Math.atan2( diff_x, diff_z );
 	    		var deg  = rad * 180.0 / Math.PI ;
-	    		var delta_x = this.speed * dt * Math.sin(rad);
-	    		var delta_z = this.speed * dt * Math.cos(rad);
+	    		
+	    		let use_speed = this.speed; 
+	    		if ( this.type == "inmate" && this.rage == 2 ) {
+	    			use_speed = 1.6 * this.speed;
+	    		}
+	    		var delta_x = use_speed * dt * Math.sin(rad);
+	    		var delta_z = use_speed * dt * Math.cos(rad);
 
 	    
 	    		let tile_x = Math.round( ( this.box2dbody.GetPosition().x  ) / this.parent.grid_size_x ) >> 0 ;
@@ -505,14 +545,15 @@ export class Txunit extends Entity {
     				this.transform.rotation.eulerAngles = new Vector3( 0, deg ,0) ;
 
 
-    				this.getComponent(Animator).getClip("Punch").playing = false;
-    				this.getComponent(Animator).getClip("Run").playing = false;
-    				this.getComponent(Animator).getClip("Walking").playing = false;
-    				
-    				if ( this.type == "zombieinmate" ) {
-    					this.getComponent(Animator).getClip("Run").playing = true;
+    				this.stopAllClips();
+			
+
+    				if ( this.type == "zombieinmate" || this.rage == 2 ) {
+
+    					this.playAnimation("Run", 1 );
+
     				} else {
-    					this.getComponent(Animator).getClip("Walking").playing = true;
+    					this.playAnimation("Walking", 1);
 					}
 				}
 
@@ -610,21 +651,27 @@ export class Txunit extends Entity {
 		if ( this.parent.game_state == 1 ) {
 
 			
-			this.stopAnimation("Walking");
-			this.stopAnimation("Punch");
-			this.stopAnimation("_idle");
-			this.stopAnimation("Run");
-			this.playAnimation("Die", 0 );
+			
+
 
 			this.dead = 1;
+			this.deadtick = 0;
 			this.parent.world.DestroyBody( this.box2dbody );
 			this.parent.unit_on_die( this );
+
+
+			this.stopAllClips();
+			this.playAnimation("Die", 0 );
+			
 
 			if ( this.shapetype == "static" ) {
 				this.parent.sounds["destruction"].playOnce();
 			} else {
 				if ( this.type == "knight" || this.type == "prince" || this.type == "archer" || this.type == "wizard" || this.type == "giant" || this.type == "inmate" ) {
 					this.parent.sounds["scream"].playOnce();
+				} else if ( this.type == "zombieinmate" ) {
+				
+					this.parent.sounds["zombiedie"].playOnce();
 				}
 				this.parent.sounds["organicdie"].playOnce();
 			}
@@ -705,11 +752,7 @@ export class Txunit extends Entity {
 					// At t0
 					if ( this.tick == this.attackSpeed ) {
 
-						this.stopAnimation("Walking" );	
-						this.stopAnimation("Run");
-						this.stopAnimation("_idle" );	
-						this.stopAnimation("Die");
-
+						this.stopAllClips();
 						this.playAnimation("Punch", 0 );
 						this.lookat_target( diff_x , diff_z );
 							
@@ -757,6 +800,7 @@ export class Txunit extends Entity {
 							if ( this.type == "towergoblinspear" ) {
 								projectile.speed = 6.5;
 							}
+							
 						} 
 
 
@@ -770,8 +814,15 @@ export class Txunit extends Entity {
 							} else if ( this.type == "skeleton" ) {
 								this.parent.sounds["skeletonhit"].playOnce();	
 							
+							} else if ( this.type == "zombieinmate") {	
+
+								this.parent.sounds["zombieattack"].playOnce();
+								this.parent.sounds["punch"].playOnce();
+							
+
 							} else {
 								this.parent.sounds["punch"].playOnce();
+							
 							}
 
 							this.box2dbody.SetLinearVelocity( new b2Vec2(0,0 ) );
@@ -802,7 +853,7 @@ export class Txunit extends Entity {
 					// attack target not in range. need not to do anything.
 					this.attacking = 0;
 
-					this.stopAnimation("Punch" );	
+					this.stopAllClips();
 					this.playAnimation("Run",1);
 					//this.attacktarget = null ;
 					if ( this.walking_queue.length == 0 ) {
@@ -875,6 +926,10 @@ export class Txunit extends Entity {
 		if ( this.attacktarget != null ) {
 			
 			this.attacktarget.curhp -= this.damage;
+
+			
+
+
 			if ( this.attacktarget.curhp < 0 ) {
 				this.attacktarget.curhp = 0;
 			}
@@ -888,6 +943,14 @@ export class Txunit extends Entity {
 				
 				//log( this.id , "inflict damage, target killed.");
 				//log( this.type, this.id , " kills " , this.attacktarget.type, this.attacktarget.id );
+					
+				// X percent chance to infect	
+				if ( this.type == "zombieinmate" && this.attacktarget.type == "inmate" ) {
+					if ( Math.random() > 0.5 ) {
+						this.attacktarget.haszombievirus = 1;
+					}
+				}
+
 				this.attacktarget.die();
 				this.attacktarget = null;
 				this.movetarget   = null;
