@@ -70,7 +70,7 @@ export class Txexplosion extends Entity {
 
 		if ( type == 1 ) {
 
-			this.addComponent( new Billboard() );
+			this.addComponent( this.parent.shared_billboard );
 
 		} else if ( type == 2 ) {
 	
@@ -83,8 +83,11 @@ export class Txexplosion extends Entity {
 			this.transform.rotation.eulerAngles = new Vector3( 90, 0 , 0 );
 			this.maxframe = 6;
 			this.attackframe = 0;
-		}
 
+		} else if ( type == 4 ) {
+			this.addComponent( this.parent.shared_billboard );
+
+		}
 		
 
 		this.tick = 0;
@@ -176,7 +179,7 @@ export class Txexplosion extends Entity {
 					this.tick += 1;
 				} else {
 					
-					if ( this.frame_index + 1 >= this.maxframe ) {
+					if ( this.frame_index + 1 >= this.maxframe && this.type != 4 ) {
 						
 						this.hide();
 
@@ -191,13 +194,17 @@ export class Txexplosion extends Entity {
 
 								let u = this.units_in_proximity[i];
 								
-								if ( u != null && u.dead == 0 && u.owner != this.owner ) {
+								if ( u != null && u.dead == 0  ) {
 									
 									let diff_x = u.transform.position.x - this.transform.position.x;
 									let diff_z = u.transform.position.z - this.transform.position.z;
 
 									let hypsqr = diff_x * diff_x + diff_z * diff_z;
-									if ( hypsqr <= this.transform.scale.x * this.transform.scale.x ) {
+
+									let radius = this.transform.scale.x / 2;
+									
+
+									if ( hypsqr <= radius * radius ) {
 										this.inflict_damage( u );
 									}	
 								}
@@ -244,9 +251,23 @@ export class Txexplosion extends Entity {
 
 			if ( this.type == 3 ) {
 
+				this.parent.sounds["scream"].playOnce();
 				this.parent.sounds["runmeme"].playOnce();
 				attacktarget.haszombievirus = 1;
 				attacktarget.die();
+
+			} else if ( this.type == 1 ) {
+
+				if ( attacktarget.type == "zombieinmate" || attacktarget.type == "inmate" ) {
+					if ( attacktarget.type == "zombieinmate" ) {
+						this.parent.sounds["zombiedie"].playOnce();
+					} else {
+						this.parent.sounds["scream"].playOnce();
+					}
+					attacktarget.setOnFire();
+				} else if ( attacktarget.type == "oilbarrel" ) {
+					attacktarget.die();
+				}
 
 
 			} else {			

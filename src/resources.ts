@@ -20,7 +20,8 @@ export default {
 		scoreboard: new GLTFShape("models/scoreboard.glb"),
 		ground: new GLTFShape("models/ground.glb"),
 		inmate: new GLTFShape("models/inmate.glb"),
-		zombieinmate: new GLTFShape("models/zombieinmate.glb")
+		zombieinmate: new GLTFShape("models/zombieinmate.glb"),
+		oilbarrel: new GLTFShape("models/oilbarrel.glb")
 	},
 	textures: {
 		skeleton: new Texture("models/skeleton_ui.png"),
@@ -33,6 +34,8 @@ export default {
 		gargoylehorde: new Texture("models/gargoylehorde_ui.png"),
 		spell_fireball: new Texture("models/spellfireball_ui.png"),
 		spell_zap	  : new Texture("models/spellzap_ui.png"),
+		spell_fire: new Texture("models/fire_ui.png"),
+
 		prince: new Texture("models/prince_ui.png"),
 		hogrider: new Texture("models/hogrider_ui.png"),
 		goblinhut: new Texture("models/goblinhut_ui.png"),
@@ -41,6 +44,8 @@ export default {
 		pekka: new Texture("models/pekka_ui.png"),
 		explosion: new Texture("models/explosion.png"),
 		fireball: new Texture("models/fireball.png"),
+		fire: new Texture("models/fire.png"),
+
 		zap: new Texture("models/zap.png"),
 		clock: new Texture("models/clock.png"),
 		crown_r : new Texture("models/crown_r.png"),
@@ -55,6 +60,8 @@ export default {
 		heart: new Texture("models/heart.png"),
 		levelbadge: new Texture("models/levelbadge.png"),
 		emptyblock: new Texture("models/emptyblock_ui.png"),
+		oilbarrel: new Texture("models/oilbarrel_ui.png"),
+
 		virus: new Texture("models/virus_ui.png"),
 		selectionring: new Texture("models/selectionring.png")
 
@@ -86,8 +93,17 @@ export default {
 		zombieattack:new AudioClip("sounds/zombieattack.mp3"),
 		runmeme:new AudioClip("sounds/runmeme.mp3"),
 		attention:new AudioClip("sounds/attention.mp3"),
-		welcome:new AudioClip("sounds/welcome.mp3")
+		welcome:new AudioClip("sounds/welcome.mp3"),
+		success:new AudioClip("sounds/success.mp3")
+	},
 
+
+	texts: {
+		spell_virus: "Zombie Virus:\nContagious virus that can turn human into zombie.\n\nTo use, click on a tile, nearby human subjects \nwithin 1.5 tile of radius will be infected and turn into zombies.\nZombies will attack other human subjects randomly\nand have 50% chance of turning others into Zombies.\nA zombie has 15 seconds lifespan",
+		emptyblock: "Empty Block.\nUseful for blocking.\nDeployment: 1x1 Tile",
+		oilbarrel: "Oil Barrel\nWill explode if ignited.\nDeployment: 1x1 Tile",
+		spell_fire:"Fire Blast\nSmall area combustion that ignites\nnearby human subjects or oilbarrels.\nRadius:1.2 tile"
+		arrowtrap: "Shoots arrow when triggered.\nDeployment:1x1 Tile"
 	}
 
 

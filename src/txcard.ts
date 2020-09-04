@@ -17,6 +17,9 @@ export class Txcard extends Entity {
 	public card_sel_highlight;
 	public model;
 	public texturename;
+	public uitxt_manaCost;
+	public description;
+	
 
 	constructor( id, parent , transform_args, type , stage , highlight_material , manaCost , model , texturename  ) {
 
@@ -124,10 +127,10 @@ export class Txcard extends Entity {
 			scale  : new Vector3(0.4,0.4,0.4)
 		}
 		));
-		txtmanacost.addComponent( new TextShape( (  "$" + this.manaCost  ) + "") );
+		txtmanacost.addComponent( new TextShape( (  this.manaCost  ) + "") );
 		txtmanacost.getComponent( TextShape ).color = Color3.White();
 		txtmanacost.getComponent( Transform ).rotation.eulerAngles = new Vector3( 180,0,0);
-
+		this.uitxt_manaCost = txtmanacost;
 
 	}
 
@@ -171,6 +174,9 @@ export class Txcard extends Entity {
         this.card_sel_highlight.getComponent( Transform ).position.x = x;
      	this.card_sel_highlight.getComponent( Transform ).position.y = y;
                
+	}
+	refresh_manaCost() {
+		this.uitxt_manaCost.getComponent(TextShape).value = this.manaCost ;
 	}
 }	
 

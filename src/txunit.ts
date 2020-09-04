@@ -82,7 +82,7 @@ export class Txunit extends Entity {
 	public isPanic = 0;
 
 	public deadtick = 0;
-
+	public fire = null;
 
 
 
@@ -187,11 +187,11 @@ export class Txunit extends Entity {
 
 		}
 
-		if ( this.type == "emptyblock" ) {
+		if ( this.type == "emptyblock" || this.type == "oilbarrel" ) {
 			this.healthbar.getComponent(Transform).position.y = 1.45;
 			this.healthbar.getComponent(Transform).scale = new Vector3( 0.4,  0.05, 0.2);
-			
 		}
+
 
 
 		
@@ -326,8 +326,14 @@ export class Txunit extends Entity {
 						
 						if ( this.shapetype == "dynamic" ) {
 
-							if ( this.type == "zombieinmate") {
-								this.curhp -= 1;
+							if ( this.type == "zombieinmate" || this.rage == 3 ) {
+
+								if ( this.type == "inmate" && this.rage == 3 ) {
+									this.curhp -= 0.2;
+								} else {
+									this.curhp -= 1;
+								}
+								
 								this.refresh_hp();
 								if ( this.curhp <= 0 ) {
 									this.die();
@@ -358,6 +364,12 @@ export class Txunit extends Entity {
 								this.find_random_move_target();
 								this.move_self( dt );
 							
+							} else if ( this.rage == 3 ) {
+
+								// Rage mode = 3, on fire....
+								this.ignite_nearby()
+								this.find_random_move_target();
+								this.move_self( dt );
 
 							} else {
 
@@ -415,6 +427,36 @@ export class Txunit extends Entity {
 		}
 	}
 
+		//-----
+	ignite_nearby() {
+
+		this.find_nearby_units( 0.5 );
+		let i;
+		for ( i = 0 ; i < this.units_in_proximity.length ; i++ ) {
+
+			let u = this.units_in_proximity[i];
+			if ( u != null && u.dead == 0 &&  u.fire == null ) {
+				
+				if ( u.type == "inmate" || u.type == "zombieinmate" ) {
+
+					/*
+					if ( u.type == "zombieinmate" ) {
+						this.parent.sounds["zombiedie"].playOnce();
+					} else {
+						this.parent.sounds["scream"].playOnce();
+					}
+					u.setOnFire();
+					*/
+				} else if ( u.type == "oilbarrel" ) {
+					
+					u.die();
+				}
+			}
+		}		
+	}
+
+
+
 
 	//----------------
 	die_and_rot() {
@@ -434,6 +476,7 @@ export class Txunit extends Entity {
 				this.dead = 2;
 				this.stopAllClips();
 				this.hide();
+
 
 			} else {
 				// Show dead body for at least 200 tick
@@ -511,7 +554,7 @@ export class Txunit extends Entity {
 	    		var deg  = rad * 180.0 / Math.PI ;
 	    		
 	    		let use_speed = this.speed; 
-	    		if ( this.type == "inmate" && this.rage == 2 ) {
+	    		if ( this.type == "inmate" && this.rage >= 2 ) {
 	    			use_speed = 1.6 * this.speed;
 	    		}
 	    		var delta_x = use_speed * dt * Math.sin(rad);
@@ -548,7 +591,7 @@ export class Txunit extends Entity {
     				this.stopAllClips();
 			
 
-    				if ( this.type == "zombieinmate" || this.rage == 2 ) {
+    				if ( this.type == "zombieinmate" || this.rage >= 2 ) {
 
     					this.playAnimation("Run", 1 );
 
@@ -662,7 +705,35 @@ export class Txunit extends Entity {
 
 			this.stopAllClips();
 			this.playAnimation("Die", 0 );
-			
+
+			if ( this.fire != null ) {
+				
+				this.fire.setParent( this.parent );
+				this.fire.hide();
+				
+			}
+
+
+			if ( this.type == "oilbarrel" ) {
+
+				
+				
+				this.parent.createExplosion( 
+	    			new Vector3( this.transform.position.x , this.transform.position.y + 1.5, this.transform.position.z ), 
+	    			this.owner, 
+	    			5,
+	    			5,
+	    			1,   //Type
+	    			10,
+	    			10,
+	    			0
+	    		);
+	    		
+	    		this.dead = 2;
+				this.hide();
+
+			}
+				
 
 			if ( this.shapetype == "static" ) {
 				this.parent.sounds["destruction"].playOnce();
@@ -680,33 +751,19 @@ export class Txunit extends Entity {
 
 
 	//-----------
-	spawn_unit() {
+	setOnFire() {
 
-		if ( this.tick <= 0 ) {
-			
-			this.tick = this.attackSpeed;
-			if ( this.type == "goblinhut" ) {
-				this.parent.createUnit( "goblinspear" , this.transform.position.x,  this.transform.position.z, this.owner , 48 ) ;
-			
-			} else if ( this.type == "tombstone" ) {
-				this.parent.createUnit( "skeleton" , this.transform.position.x,  this.transform.position.z, this.owner , 48) ;
-			}
-
-
-		} else {
-			this.tick -= 1;
-		
-			this.curhp -= 1;
-			if ( this.curhp <= 0 ) {
-				this.curhp = 0;
-			}
-			this.refresh_hp();
-			if ( this.curhp <= 0 ) {
-				this.die();
-			}
-		}
-						
+		let fi = this.parent.createExplosion( new Vector3(0,2,0) ,  1 ,  1 , 1 , 4, 0 , 0 , 0 );
+        fi.setParent( this );
+        fi.transform.position.x = 0;
+        fi.transform.position.y = 2.2;
+        fi.transform.position.z = 0;
+        fi.transform.scale.setAll(3.5);
+        
+        this.fire = fi;
+        this.rage = 3
 	}
+
 
 
 	//----
@@ -875,11 +932,7 @@ export class Txunit extends Entity {
 					this.attacking = 0;
 					if ( this.shapetype == "dynamic" ) {
 						
-						this.stopAnimation("Punch");
-						this.stopAnimation("_idle");
-						this.stopAnimation("Die");
-						this.stopAnimation("Run");
-						this.stopAnimation("Walking");
+						this.stopAllClips();
 
 						if ( this.type == "zombieinmate" ) {
 							this.playAnimation("Run", 1 );
@@ -946,7 +999,7 @@ export class Txunit extends Entity {
 					
 				// X percent chance to infect	
 				if ( this.type == "zombieinmate" && this.attacktarget.type == "inmate" ) {
-					if ( Math.random() > 0.5 ) {
+					if ( Math.random() > 0.3 ) {
 						this.attacktarget.haszombievirus = 1;
 					}
 				}
@@ -968,14 +1021,24 @@ export class Txunit extends Entity {
 		if ( this.parent.game_state == 1 ) {
 			if ( this.shapetype == "static" ) {
 
-				this.box2dbody = this.parent.createStaticBox(  
+				if ( this.type == "oilbarrel") { 
+
+					this.box2dbody = this.parent.createStaticCircle( 
 		    				this.transform.position.x ,  
 		    				this.transform.position.z ,  
 		    				box2d_transform_args.scale.x ,
-		    				box2d_transform_args.scale.z , 
-		    				this.parent.world
-		    	);
+		    				this.parent.world, 
+		    		);
 
+				} else {
+					this.box2dbody = this.parent.createStaticBox(  
+			    				this.transform.position.x ,  
+			    				this.transform.position.z ,  
+			    				box2d_transform_args.scale.x ,
+			    				box2d_transform_args.scale.z , 
+			    				this.parent.world
+			    	);
+		    	}
 
 			} else {
 				this.box2dbody = this.parent.createDynamicCircle(  
