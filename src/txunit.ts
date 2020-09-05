@@ -61,8 +61,7 @@ export class Txunit extends Entity {
 	public clips = {};
 
 	public skin_radius;
-	public tower_shooter;
-
+	
 	public projectile_user = 0;
 	
 	public units_in_proximity = [];
@@ -134,58 +133,7 @@ export class Txunit extends Entity {
 		
 		this.addComponent( new Animator );
 
-		// Includes towerarcher, towerwizard, towergoblinspear
-		if ( this.type.substr(0,5) == "tower" ) {
-
-
-			let tower_shooter = new Entity();
-			tower_shooter.setParent(this);
-			tower_shooter.addComponent( model2 );
-			tower_shooter.addComponent( new Animator );
-
-			let tax = 0;
-			let tay = 0.74;
-			let taz = 0;
-
-			tower_shooter.addComponent( new Transform( {
-				position: new Vector3( tax, tay , taz),
-				scale   : new Vector3( 0.2, 0.2, 0.2 )
-			}));
-			
-			this.tower_shooter = tower_shooter;
-			this.healthbar.getComponent(Transform).position.y = 1.45;
-			this.healthbar.getComponent(Transform).scale = new Vector3( 0.4,  0.05, 0.2);
-			
-			let _this = this;
-			this.addComponent( 
-				new OnPointerDown(
-					(e) => {
-						_this.parent.unit_input_down( e , _this ) ;	
-					},
-					{
-				      distance: 28,
-				    }
-				)
-			);	
-			
-			this.levelbadge = new Entity();
-			this.levelbadge.setParent( this );
-			this.levelbadge.addComponent( new PlaneShape() );
-			
-
-			this.levelbadge.addComponent( new Transform(
-				{
-					position: new Vector3( 0 , 1.75 , 0),
-					scale   : new Vector3(0.3, 0.3, 0.3 )
-				}	
-			));
-			this.levelbadge.addComponent( this.parent.shared_levelbadge_material );
-			this.levelbadge.addComponent( this.parent.shared_billboard );
-			this.update_levelbadge_uv();
-
-			this.skin_radius = box2d_transform_args.scale.x * 0.5;
-
-		}
+		
 
 		if ( this.type == "emptyblock" || this.type == "oilbarrel" ) {
 			this.healthbar.getComponent(Transform).position.y = 1.45;
@@ -223,8 +171,6 @@ export class Txunit extends Entity {
 		this.tick  		  = 0;
 		this.wait_buffer  = wait_buffer;
 		this.visible_ypos = this.transform.position.y;
-		//this.getComponent(GLTFShape).visible = true;
-
 		
 	}
 
@@ -257,33 +203,16 @@ export class Txunit extends Entity {
 	//-------------------
     createAnimationStates() {
         
-        if ( this.type.substr(0,5) == "tower" ) {
-        	
-        	this.getComponent(Animator).addClip( new AnimationState("ArmatureAction") );
-			this.getComponent(Animator).getClip("ArmatureAction").playing = true;
-
-			this.tower_shooter.getComponent(Animator).addClip( new AnimationState("Punch") );
-			this.tower_shooter.getComponent(Animator).addClip( new AnimationState("_idle") );
-			this.tower_shooter.getComponent(Animator).addClip( new AnimationState("Die") );
-
-			this.playAnimation("_idle", 0 );
-
-
-        } else if ( this.isSpawner == 0 ) {
-
-
-        	this.getComponent(Animator).addClip( new AnimationState("_idle") );
-			this.getComponent(Animator).addClip( new AnimationState("Walking") );
-			this.getComponent(Animator).addClip( new AnimationState("Punch") );
-			this.getComponent(Animator).addClip( new AnimationState("Die") );
-			this.getComponent(Animator).addClip( new AnimationState("Run") );
+		this.getComponent(Animator).addClip( new AnimationState("_idle") );
+		this.getComponent(Animator).addClip( new AnimationState("Walking") );
+		this.getComponent(Animator).addClip( new AnimationState("Punch") );
+		this.getComponent(Animator).addClip( new AnimationState("Die") );
+		this.getComponent(Animator).addClip( new AnimationState("Run") );
+		
 			
-   			
-			this.stopAllClips();
-			this.playAnimation("Walking", 1 );
-   			//log( this.id , "createAnimationStates" );	
-
-   		}
+		this.stopAllClips();
+		this.playAnimation("Walking", 1 );
+		
 
     }
 
@@ -313,7 +242,7 @@ export class Txunit extends Entity {
 
 				if ( this.parent.game_state == 1 ) {
 					
-					// My tower
+					
 					if ( this.shapetype == "static" ) {
 
 						if ( this.attackRange > 0 ) {
@@ -525,7 +454,7 @@ export class Txunit extends Entity {
 
 		if ( this.parent.game_mode == 2 ) {
 			
-			this.box2dbody.SetPosition( new b2Vec2( cur_x, cur_z ) ;
+			this.box2dbody.SetPosition( new b2Vec2( cur_x, cur_z ) );
 			this.updatePosition_toBox2d() ;
 
 			this.walking_queue.length = 0;
@@ -550,7 +479,6 @@ export class Txunit extends Entity {
 
 
 	//-------------
-	// If monster is trapped, it will then turn on rage mode and attack the building.
 	move_self( dt ) {
 
 
@@ -593,6 +521,9 @@ export class Txunit extends Entity {
 				}
 
 				if ( this.prevtilepostick > 100 ) {
+
+					// If this unit is stuck in the same tile for > 100 ticks, try to find new move target random angle from current angle..
+
 					
 					// If multiplayer, let host do the randomization.
 					if ( this.parent.game_mode == 1 || this.parent.isClient == 0 ) {
@@ -645,7 +576,7 @@ export class Txunit extends Entity {
 
 
 	//----------------------
-	// Move along pathfinder result's solution.
+	// Move along pathfinder result's solution... USed in TD not here...
 	move_along_path( dt ) {
 
 		
@@ -771,7 +702,7 @@ export class Txunit extends Entity {
 			if ( this.shapetype == "static" ) {
 				this.parent.sounds["destruction"].playOnce();
 			} else {
-				if ( this.type == "knight" || this.type == "prince" || this.type == "archer" || this.type == "wizard" || this.type == "giant" || this.type == "inmate" || this.type == "rangerinmate" ) {
+				if ( this.type == "inmate" || this.type == "rangerinmate" ) {
 					this.parent.sounds["scream"].playOnce();
 				} else if ( this.type == "zombieinmate" ) {
 				
@@ -851,28 +782,17 @@ export class Txunit extends Entity {
 
 							let srcx, srcy, srcz;
 
-							if ( this.type.substr(0,5) == "tower" ) {
-
-								srcx = this.transform.position.x + this.tower_shooter.getComponent(Transform).position.x;
-								srcy = this.transform.position.y + this.tower_shooter.getComponent(Transform).position.y + 0.14;
-								srcz = this.transform.position.z + this.tower_shooter.getComponent(Transform).position.z;
+							srcx = this.transform.position.x;
+							srcy = this.transform.position.y + 0.14;
+							srcz = this.transform.position.z;
 							
-							} else  {
-
-								srcx = this.transform.position.x;
-								srcy = this.transform.position.y + 0.14;
-								srcz = this.transform.position.z;
-							}
 
 							let dstx = this.attacktarget.transform.position.x;
 							let dsty = this.attacktarget.transform.position.y;
 							let dstz = this.attacktarget.transform.position.z;
 
 							let projectile_type = 1;
-							if ( this.type == "wizard" || this.type == "towerwizard" ) {
-								projectile_type = 2;
-							}
-
+							
 
 
 							//createProjectile( src_v3, dst_v3 , owner , projectile_type , attacktarget, damage , damage_building ) {
@@ -887,9 +807,7 @@ export class Txunit extends Entity {
 									this.damage,
 									0
 							);
-							if ( this.type == "towergoblinspear" ) {
-								projectile.speed = 6.5;
-							}
+							
 							
 						} 
 
@@ -899,12 +817,7 @@ export class Txunit extends Entity {
 
 						if ( this.projectile_user == 0 ) {
 							// Melee
-							if ( this.type == "knight" || this.type == "pekka") {	
-								this.parent.sounds["swordhit"].playOnce();
-							} else if ( this.type == "skeleton" ) {
-								this.parent.sounds["skeletonhit"].playOnce();	
-							
-							} else if ( this.type == "zombieinmate") {	
+							if ( this.type == "zombieinmate") {	
 
 								this.parent.sounds["zombieattack"].playOnce();
 								this.parent.sounds["punch"].playOnce();
@@ -995,13 +908,8 @@ export class Txunit extends Entity {
 		var rad	 = Math.atan2( diff_x, diff_z );
 		var deg  = rad * 180.0 / Math.PI ;
 				
-		if ( this.type.substr(0,5) != "tower" ) {
-			this.transform.rotation.eulerAngles = new Vector3( 0, deg ,0) ;
+		this.transform.rotation.eulerAngles = new Vector3( 0, deg ,0) ;
 
-		} else  {
-			let tower_shooter_transform = this.tower_shooter.getComponent(Transform);
-			tower_shooter_transform.rotation.eulerAngles = new Vector3( 0, deg ,0) ;
-		}
 	}	
 
 	//---
@@ -1237,27 +1145,8 @@ export class Txunit extends Entity {
     //------------
     playAnimation( action_name, loop ) {
 
-    	
-    	//log( this.id, "playAnimation " , action_name , loop );
-    	
-    	/*
-    	let i;
-		for ( i = 0 ; i < this.clip_names.length ; i++ ) {
-			if ( this.clip_names[i] != action_name ) {
-				this.stopAnimation( this.clip_names[i]);
-			}
-		}
-		*/
-
-		
-		//log( this.type , this.id , "Attempt to play" , action_name , loop );
-		let clip;
-		if ( this.type.substr(0,5) == "tower" ) {
-			clip = this.tower_shooter.getComponent(Animator).getClip( action_name );
-		} else {
-			clip = this.getComponent(Animator).getClip(action_name);
-    	}
-    	
+    	let clip;
+		clip = this.getComponent(Animator).getClip(action_name);
     				
 		if ( loop == 1  ) {
     		clip.looping = true;
@@ -1269,15 +1158,12 @@ export class Txunit extends Entity {
     		clip.speed = 30.0 / this.attackSpeed ;
     	
     	} else if ( action_name == "Run" ) {
-
     		clip.speed = 2.0;
 
     	} else {
     		clip.speed = 1.0;
     	}
 
-
-    	
     	clip.reset();
 		clip.playing = true;
 		
@@ -1288,11 +1174,7 @@ export class Txunit extends Entity {
     	
     	//log( this.type , this.id , "Attempt to stop" , action_name );
     	let clip;
-    	if ( this.type.substr(0,5) == "tower" ) {
-			clip = this.tower_shooter.getComponent(Animator).getClip( action_name );
-		} else {
-			clip = this.getComponent(Animator).getClip(action_name);
-    	}
+    	clip = this.getComponent(Animator).getClip(action_name);
     	clip.playing = false;
     	
     }

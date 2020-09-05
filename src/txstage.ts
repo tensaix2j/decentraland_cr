@@ -143,8 +143,15 @@ export class Txstage extends Entity {
     public time_remaining = this.level_initial_time;
     
 
+    public tile_x_size = 1;
+    public tile_z_size = 1;
+    public tile_x_gap  = 0.075;
+    public tile_z_gap  = 0.075;
 
-    public debugsetting = 0;
+    public grid_size_x =  this.tile_x_size + this.tile_x_gap;
+    public grid_size_z =  this.tile_z_size + this.tile_z_gap;
+
+
 
 
 
@@ -229,97 +236,12 @@ export class Txstage extends Entity {
         this.reset_game();
 
 
-        this.debug();
-
     }   
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    public tile_x_size = 1;
-    public tile_z_size = 1;
-    public tile_x_gap  = 0.075;
-    public tile_z_gap  = 0.075;
-
-    public grid_size_x =  this.tile_x_size + this.tile_x_gap;
-    public grid_size_z =  this.tile_z_size + this.tile_z_gap;
-
-
-    //-------------
-    debug( ) {
-
-
-        this.debugsetting = 0;
-
-
-
-        if ( this.debugsetting == 1 ) {
-
-            /*
-                
-            let i, j;
-              
-            this.game_state = 1;
-            this.game_mode  = 1;
-            
-
-
-            //this.createUnit( type, x  , z , owner, wait_buffer );
-
-            //this.queue_command( [ "spawnUnit", "inmate" , Math.random() * 12 - 6 , Math.random() * 12 - 6 , -1 ] );
-            for ( i = 0 ; i < 15; i++ ) {
-                let unit = this.createUnit( "inmate" , Math.random() * 12 - 6 , Math.random() * 12 - 6 , -1  , 0 );
-            }
-            
-            //unit.setOnFire();            
-        
-
-
-
-
-
-            this.time_remaining = 10000000;
-
-            this.cards_dealt_in_game = this.player_cards_collection.length;
-            
-            
-            this.select_all_cards();
-            this.fill_player_cards_selected();
-            this.rearrange_cards_selected();
-            this.update_button_ui();
-            */
-
-
-            this.time_start  = 0;
-            this.sounds["success"].playOnce();
-            this.animate_button_callback_id = "singleplayer";
-            this.animate_button_tick = 100;
-            this.uitxt_instruction.value = "LEVEL COMPLETED!"
-
-            this.reset_level();
-
-            this.current_wave = 5;
-
-
-
-        }
-           
-
-    }   
-
+   
 
 
 
@@ -484,6 +406,8 @@ export class Txstage extends Entity {
         }
     }
 
+
+    //--------------------------
     format_timeremaining() {
 
         let minutes_rem = (this.time_remaining / 60 ) >> 0;
@@ -766,9 +690,7 @@ export class Txstage extends Entity {
         	
 
             // E button
-        	if ( this.debugsetting == 1 ) {
-                this.kill_all_units();
-            }
+        	
 
         } else if ( e.buttonId == 2 ) {
         	// F button 	
@@ -797,78 +719,13 @@ export class Txstage extends Entity {
     //------------------
     txclickable_button_onclick( id , userData ) {
         
-
-        if ( id == "confirm" && this.game_state == 0 && this.menu_page == 1 ) {
-
-            if ( this.count_card_selected() == this.need_select_n_card ) {
-                
-
-                if ( this.game_mode == 1 ) {
-                
-                    // Single player. Can start straight away..
-                    this.animate_button_tick = 20;
-                    this.animate_button_callback_id = id;
-                    this.sounds["buttonclick"].playOnce();
-                
-
-                } else if ( this.game_mode == 2 ) {
-
-                    // Multiplayer requires both player to click confirm.
-
-                    let params  = {
-                        userID      : this.userID,
-                        recipient   : this.opponent
-                    }
-                    this.messageBus.emit( "iamready", params );
-                    this.isReady = 1;
-                    this.check_both_ready("confirm");
-                }
-
-            } else {
-                this.menu_labels["lbl1"].getComponent( TextShape ).value = "Please select exactly " + this.need_select_n_card + " cards";
-                this.sounds["denied"].playOnce();
-
-            }
-
-
-
-        } else if ( id == "upgrade" && this.current_selected_unit != null ) {
-            
-
-        } else if ( id == "sell" && this.current_selected_unit != null ) {    
-            
-            
-        } else {
-
-            this.animate_button_tick = 20;
-            this.animate_button_callback_id = id;
-            this.animate_button_userdata = userData;
-            this.sounds["buttonclick"].playOnce();
-
-            
-        }
+        this.animate_button_tick = 20;
+        this.animate_button_callback_id = id;
+        this.animate_button_userdata = userData;
+        this.sounds["buttonclick"].playOnce();
 
    }
 
-
-    //----------
-    check_both_ready( id ) {
-
-        if ( this.isReady == 1 && this.isOpponentReady == 1 ) {
-            this.animate_button_tick = 20;
-            this.animate_button_callback_id = id;
-            this.sounds["buttonclick"].playOnce();
-            this.globaltick = 0;
-
-
-        } else {
-            if ( this.isReady == 1 ) {
-                this.menu_labels["lbl3"].getComponent( TextShape ).value = "Waiting for " +  this.opponent + " to get Ready ...";
-            } else {
-                this.menu_labels["lbl3"].getComponent( TextShape ).value = this.opponent + " is Ready";
-            }
-        }
-    }
 
 
    //-------------------------
@@ -1013,22 +870,7 @@ export class Txstage extends Entity {
             this.update_button_ui();
 
 
-        } else if ( id == "confirm" ) {
-
-            if ( this.game_state == 0 && this.menu_page == 1 ) {
-                
-               
-                this.menu_page = 2;
-                this.update_button_ui();
-                this.animate_button_callback_id = "battlebegin";
-                this.animate_button_tick = 40;
-                this.uitxt_instruction.value = "Start";
-                
-
-            }
-
-
-       
+        
 
         } else if ( id == "battlebegin" ) {
 
@@ -1089,17 +931,6 @@ export class Txstage extends Entity {
 
             this.reset_game();
             this.update_button_ui();
-            
-        } else if ( id == "unitclick" ) {
-
-            this.menu_page = 12;
-            this.update_button_ui();
-        
-
-        } else if ( id == "upgrade" ) {
-            
-            this.update_button_ui();
-
         }
    }
 
@@ -1112,8 +943,6 @@ export class Txstage extends Entity {
         
         if ( this.game_state == 0 ) {
 
-            
-            
 
         } else if ( this.game_state == 1 ) {
     	      
@@ -1331,16 +1160,7 @@ export class Txstage extends Entity {
         });
 
 
-        this.messageBus.on("iamready", (info: EmitArg) => {
-
-            if ( this.userID != info.userID    && this.userID == info.recipient  ) {
-                    
-                log("bus: iamready", info );
-                _this.isOpponentReady = 1;
-                _this.check_both_ready("confirm");
-
-            }
-        });
+        
 
         this.messageBus.on("gamecmd", (info: EmitArg) => {
 
@@ -1726,28 +1546,6 @@ export class Txstage extends Entity {
 
 
 
-    //----------------
-    rotate_card_in_use() {
-
-        let i;
-
-        if ( this.txcard_selected != null ) {
-            
-            let card_selected_index = this.get_txcard_selected_index();
-            this.player_cards_in_use[card_selected_index] = this.player_cards_in_use[this.cards_dealt_in_game];
-            this.player_cards_in_use[this.cards_dealt_in_game] = this.player_cards_in_use[this.cards_dealt_in_game+1];
-            this.player_cards_in_use[this.cards_dealt_in_game+1] = this.player_cards_in_use[this.cards_dealt_in_game+2];
-            this.player_cards_in_use[this.cards_dealt_in_game+2] = this.player_cards_in_use[this.cards_dealt_in_game+3];
-            this.player_cards_in_use[this.cards_dealt_in_game+3] = this.txcard_selected;
-            this.txcard_selected.turnoff();
-        }
-        this.txcard_selected = null;
-        this.uiimg_selected_card.visible = false;
-                
-
-        this.rearrange_cards_selected(); 
-        
-    }
 
 
     //---------------
@@ -1776,25 +1574,6 @@ export class Txstage extends Entity {
     }
 
 
-    //------------------
-    rearrange_cards_collection() {
-
-        let i;
-
-        for ( i = 0 ; i < this.player_cards_collection.length ; i++ ) {
-            
-            let txcard = this.player_cards_collection[i];
-            if ( typeof txcard != "undefined" ) {
-                let x = ( i % 4 ) * 1.2 - 2;
-                let y = ((i / 4)  >> 0 ) * 1.2;
-            
-                txcard.reposition( x,y );
-                txcard.show();
-                txcard.turnoff();
-            }
-        }
-
-    }
 
     //------------------
     rearrange_cards_selected() {
@@ -1820,19 +1599,6 @@ export class Txstage extends Entity {
             }
             
         }
-    }
-
-    //-----
-    count_card_selected() {
-
-        let i;
-        let count = 0;
-        for ( i = 0 ; i < this.player_cards_collection.length ; i++ ) {
-            if ( this.player_cards_collection[i].isSelected ) {
-                count += 1;
-            }
-        }
-        return count;
     }
 
 
@@ -1872,20 +1638,6 @@ export class Txstage extends Entity {
                 }
             }
         }
-
-        
-        /*
-        // No need do this , we are not playing td
-        // Check path
-        
-        let findpath_ret    =  this.pathfinder.findPath( -7,0 ,7, 0) ;
-        if ( findpath_ret == -1 ) {
-            // No solution 
-            log( "Main route cannot");
-            node["walkable"] = 1;
-            return -2;
-        }
-        */
 
         return 1;
     }
@@ -2124,6 +1876,8 @@ export class Txstage extends Entity {
 
     init_resources_by_level() {
 
+        // This code is ported from Mana Royale. The manaCost is used as Quantity here..
+
         // Level 1 : 15 inmates
         this.player_cards_collection[0].manaCost = 1;
         this.player_cards_collection[1].manaCost = 0;
@@ -2307,7 +2061,7 @@ export class Txstage extends Entity {
 
     //--------
     //
-    public preload_glb_list = ["inmate", "zombieinmate","rangerinmate"];
+    public preload_glb_list = ["inmate", "zombieinmate","rangerinmate", "oilbarrel"];
 
     preload_glb() {
 
@@ -3475,29 +3229,7 @@ export class Txstage extends Entity {
     }
 
 
-    /*
-        
-                                Dmg         HP          Hitspeed  Radius
-        Skeleton                67          67            1
-        Giant                   211         3275        1.5             
-        Knight                  167         1452        1.2
-        Archer                   89         252         1.2
-        Wizard                  234         598         1.4
-        Goblin                   90         167         1.1
-        Megaminion              161         695         1.6
-        MinionHorde              84         190           1
-
-
-        Fireball                572(172)                            2.5                 
-        Zap                     159(48)                             2.5
-        Goblin Hut              
-        Tomb Stone                                  
-        Hogrider                264         1408       1.6
-        Prince                  325         1669       1.4
-        Goblin Spear             67         110        1.7
-        Pekka                   678         3125       1.8
-
-    */
+    
 
     //---------------------
     createUnit( type , x, z , owner, wait_buffer  ) {
@@ -3530,22 +3262,7 @@ export class Txstage extends Entity {
         let shapetype   = "dynamic";
     	
 
-    	if ( type == "skeleton" ) {
-    		y 			= 1.6;
-    		modelsize 	= 0.15;
-    		b2dsize  	= 0.15;
-    		model 		= resources.models.skeleton;
-
-            damage      = 7;
-            maxhp       = 270;
-            attackSpeed = 30;
-
-            speed       = 15;
-
-            this.sounds["skeletonhit"].playOnce();
-
-
-        } else if ( type == "inmate" ) {
+    	if ( type == "inmate" ) {
 
 
             y            = 1.6;
@@ -3599,320 +3316,7 @@ export class Txstage extends Entity {
     
             this.sounds["zombieroar"].playOnce();
 
-            
-    	} else if ( type == "giant" ) {
-
-    		y 			= 1.85;
-    		modelsize 	= 0.20;
-    		b2dsize  	= 0.25;
-    		model 		= resources.models.giant;
-
-            damage      = 21;
-            maxhp       = 8175;
-            attackSpeed = 45;
-
-            speed       = 14;
-
-            healthbar_y = 4;
-            attack_building_only = 1;
-
-            this.sounds["burp"].playOnce();
-            
-                
-    	
-    	} else if ( type == "knight" ) {
-
-    		y 			= 1.71;
-    		modelsize 	= 0.18
-    		b2dsize  	= 0.15;
-    		model 		= resources.models.knight;
-
-            damage      = 16;
-            maxhp       = 1452;
-            attackSpeed = 36;
-
-            speed       = 15;
-
-
-    	
-    	} else if ( type == "archer" ) {
-
-    		y 			= 1.65;
-    		modelsize 	= 0.15;
-    		b2dsize  	= 0.15;
-    		model 		= resources.models.archer;
-            
-
-            damage      = 9;
-            maxhp       = 252;
-            attackSpeed = 36;
-            
-            speed       = 19;
-
-
-
-            attackRange = 5.0;
-            projectile_user = 1;
-
-
-
-
-    	
-    	} else if ( type == "wizard" ) {
-
-    		y 			= 1.65;
-    		modelsize 	= 0.15;
-    		b2dsize  	= 0.15;
-    		model 		= resources.models.wizard;
-
-    	    damage      = 23;
-            maxhp       = 598;
-            attackSpeed = 42;
-            
-            speed       = 16;
-
-            attackRange = 5.0;
-            projectile_user = 1;
-            
-
-    	
-    	} else if ( type == "goblin" ) {
-
-    		y 			= 1.6;
-    		modelsize 	= 0.15;
-    		b2dsize  	= 0.15;
-    		model 		= resources.models.goblin;
-    		speed 		= 5.0;
-
-    		damage      = 9;
-            maxhp       = 267;
-            attackSpeed = 33;
-            
-            speed       = 33;
-            attackRange = 0.6;
-
-
-    	} else if ( type == "gargoyle" ) {
-    		
-    		y 			= 3.5;
-    		modelsize 	= 0.28;
-    		b2dsize  	= 0.28;
-    		model 		= resources.models.gargoyle;
-    		isFlying    = 1;
-            
-            damage      = 15;
-            maxhp       = 6195;
-            attackSpeed = 48;
-            speed       = 18;
-
-            this.sounds["gargoyle"].playOnce();
-
-    	} else if ( type == "gargoylehorde" ) {
-    		y 			= 3.5;
-    		modelsize 	= 0.18;
-    		b2dsize  	= 0.18;
-    		model 		= resources.models.gargoyle;
-    		isFlying    = 1;
-            
-            damage      = 8;
-            maxhp       = 50;
-            attackSpeed = 30;
-
-            speed       = 19;
-
-            this.sounds["gargoyle"].playOnce();
-            
-            
-    	} else if ( type == "goblinspear" ) {
-            y           = 1.6;
-            modelsize   = 0.15;
-            b2dsize     = 0.15;
-            model       = resources.models.goblinspear;
-            
-            damage      = 6;
-            maxhp       = 110;
-            attackSpeed = 33;
-
-
-            speed       = 40;
-
-            attackRange = 5.0;
-            projectile_user = 1;
-
-
-        } else if ( type == "prince" ) {
-
-            y           = 1.85;
-            modelsize   = 0.18;
-            b2dsize     = 0.15;
-            model       = resources.models.prince;
-            
-
-            damage      = 32;
-            maxhp       = 15669;
-            attackSpeed = 42;
-
-            speed       = 43;
-
-            attackRange = 0.6;
         
-
-            this.sounds["horse"].playOnce();
-
-
-
-        } else if ( type == "hogrider" ) {
-
-            y           = 1.85;
-            modelsize   = 0.15;
-            b2dsize     = 0.15;
-            model       = resources.models.hogrider;
-            
-            damage      = 26;
-            maxhp       = 2408;
-            attackSpeed = 48;
-            speed       = 45;
-
-             attack_building_only = 1;
-
-            this.sounds["pig"].playOnce();
-            attackRange = 0.4;
-
-
-        } else if ( type == "pekka" ) {
-
-            y           = 1.6;
-            modelsize   = 0.15;
-            b2dsize     = 0.2;
-            model       = resources.models.pekka;
-
-            damage      = 67;
-            maxhp       = 23125;
-            attackSpeed = 54;
-            speed       = 14.5;
-            healthbar_y = 5.5;
-
-            attackRange = 0.62;
-
-
-
-
-
-        } else if ( type == "tombstone" ) {
-
-            y           = 1.55;
-            modelsize   = 0.24;
-            b2dsize     = 0.24;
-            model       = resources.models.tombstone;
-
-            damage      = 0;
-            maxhp       = 422;
-            attackSpeed = 120;
-            speed       = 0;
-            isSpawner    = 1;
-
-
-         } else if ( type == "goblinhut" ) {
-
-            y           = 1.85;
-            modelsize   = 0.26;
-            b2dsize     = 0.3;
-            model       = resources.models.goblinhut;
-
-            damage      = 0;
-            maxhp       = 844;
-            attackSpeed = 135;
-            speed       = 0;
-            isSpawner    = 1;
-        
-
-
-
-
-
-
-
-        } else if ( type == "towerarcher" ) {
-
-            y           = 1.41;
-            modelsize   = 1.0;
-            b2dsize     = 1.0;
-            
-            model       = this.shared_box;
-            model2      = resources.models.archer;
-            
-            damage      = 89;
-            maxhp       = 252;
-            attackSpeed = 36;
-            
-            speed       = 0;
-
-            healthbar_y  = 2;
-            attackRange = 5.0;
-            projectile_user = 1;
-    
-            shapetype = "static";
-
-        
-        } else if ( type == "towerwizard" ) {
-
-            y           = 1.41;
-            modelsize   = 1.0;
-            b2dsize     = 1.0;
-            
-            model       = this.shared_box;
-            model2      = resources.models.wizard;
-            
-            damage      = 234;
-            maxhp       = 598;
-            attackSpeed = 42;
-            
-            speed       = 0;
-
-            attackRange = 5.0;
-            projectile_user = 1;
-    
-            shapetype = "static";
-
-
-         } else if ( type == "towergoblinspear" ) {
-
-            y           = 1.41;
-            modelsize   = 1.0;
-            b2dsize     = 1.0;
-            
-            model       = this.shared_box;
-            model2      = resources.models.goblinspear;
-            damage      = 67;
-            maxhp       = 110;
-            attackSpeed = 8;
-            speed       = 0;
-            attackRange = 4.5;
-            projectile_user = 1;
-    
-            shapetype = "static";    
-
-
-
-
-        } else if ( type == "towerknight" ) {
-
-            y           = 1.41;
-            modelsize   = 1.0;
-            b2dsize     = 1.0;
-            
-            model       = this.shared_box;
-            model2      = resources.models.knight;
-            damage      = 167;
-            maxhp       = 1452;
-            attackSpeed = 36;
-            speed       = 0;
-            attackRange = 1.5;
-            projectile_user = 0;
-    
-            shapetype = "static";    
-            
-
         } else if ( type == "emptyblock" ) {
 
             y           = 1.41;
@@ -3978,8 +3382,7 @@ export class Txstage extends Entity {
             unit.attacktarget = null ;
             unit.movetarget   = null ;
             unit.attacking    = 0;
-            unit.healthbar.getComponent( Transform ).scale.x = 1.5;
-
+            
             unit.stopAllClips();
             unit.playAnimation("Walking",1);
             
@@ -4085,9 +3488,6 @@ export class Txstage extends Entity {
 
         this.sounds["spawn"].playOnce();
 
-        //unit.speed = 0;
-        
-    	
 		
     	return unit;
     }
