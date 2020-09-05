@@ -262,7 +262,7 @@ export class Txstage extends Entity {
     debug( ) {
 
 
-        this.debugsetting = 1;
+        this.debugsetting = 0;
 
 
 
@@ -274,7 +274,7 @@ export class Txstage extends Entity {
               
             this.game_state = 1;
             this.game_mode  = 1;
-
+            
 
 
             //this.createUnit( type, x  , z , owner, wait_buffer );
@@ -285,6 +285,8 @@ export class Txstage extends Entity {
             }
             
             //unit.setOnFire();            
+        
+
 
 
 
@@ -299,6 +301,18 @@ export class Txstage extends Entity {
             this.rearrange_cards_selected();
             this.update_button_ui();
             */
+
+
+            this.time_start  = 0;
+            this.sounds["success"].playOnce();
+            this.animate_button_callback_id = "singleplayer";
+            this.animate_button_tick = 100;
+            this.uitxt_instruction.value = "LEVEL COMPLETED!"
+
+            this.reset_level();
+
+            this.current_wave = 5;
+
 
 
         }
@@ -453,7 +467,11 @@ export class Txstage extends Entity {
                     let alive_inmates = this.count_remaining_inmates();
                     if ( alive_inmates == 0 ) {
                         this.level_complete();
+                    
+                    } else {
+                       
                     }
+
                 } else {
                     this.level_failed();
                 }
@@ -652,6 +670,9 @@ export class Txstage extends Entity {
 
 
     global_input_down(e) {
+
+
+       
 
         if ( e.buttonId == 0 ) {
 
@@ -904,7 +925,13 @@ export class Txstage extends Entity {
 
             this.menu_labels["lbl1"].getComponent(TextShape).value =  "LEVEL " + cur_level + ":\n\n";
             this.menu_labels["lbl1"].getComponent(TextShape).value += "Objective: Eliminate All Human Test Subjects\n\n";
-            this.menu_labels["lbl1"].getComponent(TextShape).value += this.inmate_count_by_level() + " Human Subjects\n\n";
+
+
+            let inmate_count = this.inmate_count_by_level();
+            let ranger_inmate_count = this.ranger_inmate_count_by_level();
+
+
+            this.menu_labels["lbl1"].getComponent(TextShape).value += ( inmate_count + ranger_inmate_count ) + " Human Subjects\n\n";
             this.menu_labels["lbl1"].getComponent(TextShape).value += "Time: " + this.format_timeremaining()  + "\n";
 
             let i; 
@@ -917,7 +944,9 @@ export class Txstage extends Entity {
             
             
             
-                
+        } else if ( id == "endinggame" ) {
+
+            this.endgame();     
 
 
         } else if ( id == "multiplayer" ) {
@@ -1033,7 +1062,14 @@ export class Txstage extends Entity {
 
             this.update_button_ui();
             
-            this.init_inmates( this.inmate_count_by_level() );
+
+            let inmate_count = this.inmate_count_by_level();
+            let ranger_inmate_count = this.ranger_inmate_count_by_level();
+
+            this.init_inmates( inmate_count );
+            this.init_rangerinmates( ranger_inmate_count );
+                
+
             this.time_start  = 1;    
                     
 
@@ -1494,12 +1530,12 @@ export class Txstage extends Entity {
     //-------------
     // Bookmark endgame
     endgame( ) {
-    
+        
+        this.sounds["applause"].playOnce();
         this.time_start  = 0;
         this.game_state = 2;
-        let final_txt = "Game Over.\n";
+        let final_txt = "CONGRATULATION. YOU WON!\n";
 
-        
         final_txt += "\n\nLeave game to restart again";
         this.uitxt_instruction.value = final_txt;
         this.uitxt_time.value = "";
@@ -1513,14 +1549,19 @@ export class Txstage extends Entity {
 
         this.time_start  = 0;
         this.sounds["success"].playOnce();
-        this.animate_button_callback_id = "singleplayer";
-        this.animate_button_tick = 100;
-        this.uitxt_instruction.value = "LEVEL COMPLETED!"
-
-        this.reset_level();
 
         this.current_wave += 1;
 
+        if ( this.current_wave < 10 ) {
+            this.animate_button_callback_id = "singleplayer";
+        } else {
+             this.animate_button_callback_id = "endinggame";
+        }   
+
+        this.animate_button_tick = 100;
+        this.uitxt_instruction.value = "LEVEL COMPLETED!"
+        this.reset_level();
+       
     }
     //----
     level_failed() {
@@ -1545,7 +1586,7 @@ export class Txstage extends Entity {
         let alivecount = 0;
         for ( i = 0 ; i < this.units.length ; i++ ) {
             let u = this.units[i];
-            if ( u != null && ( u.dead == 0 || u.dead == 3 ) && ( u.type == "inmate" || u.type == "zombieinmate" )) { 
+            if ( u != null && ( u.dead == 0 || u.dead == 3 ) && ( u.type == "inmate" || u.type == "zombieinmate" || u.type == "rangerinmate" )) { 
                 alivecount += 1;
                 break;
             }
@@ -1554,6 +1595,16 @@ export class Txstage extends Entity {
     }
 
 
+    //------------------
+    count_remaining_resources() {
+        let i;
+        for ( i = 0 ; i < this.player_cards_collection.length ; i++ ) {
+            if ( this.player_cards_collection[i].manaCost > 0 ) {
+                return 1;
+            }
+        }
+        return 0;
+    }
 
 
 
@@ -1769,6 +1820,14 @@ export class Txstage extends Entity {
 
     }
 
+    init_rangerinmates( inmate_count ) {
+
+        let i;
+        for ( i = 0 ; i < inmate_count ; i++ ) {
+            this.queue_command( [ "spawnUnit", "rangerinmate" , Math.random() * 12 - 6 , Math.random() * 12 - 6 , -1 ] );
+        }
+    }
+
 
 
     kill_all_units() {
@@ -1776,7 +1835,7 @@ export class Txstage extends Entity {
         let i;
         for ( i = 0 ; i < this.units.length ; i++ ) {
             let u = this.units[i];
-            if ( u != null && u.dead == 0 && ( u.type == "inmate" || u.type == "zombieinmate" ) )  { 
+            if ( u != null && u.dead == 0 && ( u.type == "inmate" || u.type == "zombieinmate" || u.type == "rangerinmate" ) )  { 
                 u.die();
             }
         }
@@ -1815,36 +1874,99 @@ export class Txstage extends Entity {
 
     inmate_count_by_level() {
 
-        let inmate_count = 15;
+        // Level1
+        let inmate_count = 40;
         
         if ( this.current_wave == 1 ) {
+            // Level2
             inmate_count = 30;
         } else if ( this.current_wave == 2 ) {
+
+            // Level 3
             inmate_count = 5;
         
         } else if ( this.current_wave == 3 ) {
-            inmate_count = 40;
+            // Level 4
+            inmate_count = 10;
         
         } else if ( this.current_wave == 4 ) {
+
+            // Level 5
             inmate_count = 50;
+
         }  else if ( this.current_wave == 5 ) {
-            inmate_count = 1;
+
+            // LEvel 6
+            inmate_count = 25;
         
         } else if ( this.current_wave == 6 ) {
-            inmate_count = 10;
+        
+            // Level 7
+            inmate_count = 15;
+        
+
+        } else if ( this.current_wave == 7 ) {
+
+            //level 8
+            inmate_count = 20;
+
+
+        } else if ( this.current_wave == 8 ) {
+
+            //level 8
+            inmate_count = 20;
+
+
+        } else if ( this.current_wave == 9 ) {
+
+            //level 8
+            inmate_count = 20;
+                       
         }
 
         return inmate_count;
     }
 
+
+
+
+
+    //-------------------------
+    ranger_inmate_count_by_level() {
+        
+        let ranger_inmate_count = 0;
+        if ( this.current_wave == 5 ) {
+            ranger_inmate_count = 5;
+        } else if ( this.current_wave == 6 ) {
+
+            ranger_inmate_count = 15;
+        
+        } else if ( this.current_wave == 7 ) {
+            ranger_inmate_count = 20;
+
+        } else if ( this.current_wave == 8 ) {
+            ranger_inmate_count = 20;
+
+        } else if ( this.current_wave == 9 ) {
+            ranger_inmate_count = 20;
+
+        }
+        return ranger_inmate_count;
+    }
+
+
+
+
+    //-------------------------
     timeduration_by_level() {
+
 
         let time_remaining = 300;
 
         if ( this.current_wave == 1 ) {
             time_remaining = 300;
         } else if ( this.current_wave == 2 ) {
-            time_remaining = 60;
+            time_remaining = 90;
 
         } else if ( this.current_wave == 3 ) {
             time_remaining = 200;
@@ -1869,6 +1991,7 @@ export class Txstage extends Entity {
 
     init_resources_by_level() {
 
+        // Level 1 : 15 inmates
         this.player_cards_collection[0].manaCost = 1;
         this.player_cards_collection[1].manaCost = 0;
         this.player_cards_collection[2].manaCost = 0;
@@ -1877,18 +2000,79 @@ export class Txstage extends Entity {
         let inmate_count = this.inmate_count_by_level();
 
         if ( this.current_wave == 1 ) {
-            
+            // Level 2, 30 inms
+            this.player_cards_collection[0].manaCost = 0;
             this.player_cards_collection[1].manaCost = 0;
             this.player_cards_collection[2].manaCost = 10;
             this.player_cards_collection[3].manaCost = 10;
             
 
-        }  else if ( this.current_wave >= 2 ) {
-
-            this.player_cards_collection[1].manaCost = 5;
+        }  else if ( this.current_wave == 2 ) {
+            // Level 3, 5 inmates, trap them
+            this.player_cards_collection[0].manaCost = 0;
+            this.player_cards_collection[1].manaCost = 40;
             this.player_cards_collection[2].manaCost = 3;
             this.player_cards_collection[3].manaCost = 3;
-        }
+        
+        }  else if ( this.current_wave == 3 ) {
+            // Level 4, 40 inmates mix of resources
+            this.player_cards_collection[0].manaCost = 1;
+            this.player_cards_collection[1].manaCost = 10;
+            this.player_cards_collection[2].manaCost = 0;
+            this.player_cards_collection[3].manaCost = 1;
+                
+
+        }  else if ( this.current_wave == 4 ) {
+            // Level 5, 50 inmates mix of resources
+            this.player_cards_collection[0].manaCost = 0;
+            this.player_cards_collection[1].manaCost = 10;
+            this.player_cards_collection[2].manaCost = 20;
+            this.player_cards_collection[3].manaCost = 1;        
+        
+        }  else if ( this.current_wave == 5 ) {
+            // Level 6, 50 inmates mix of resources
+            this.player_cards_collection[0].manaCost = 5;
+            this.player_cards_collection[1].manaCost = 0;
+            this.player_cards_collection[2].manaCost = 0;
+            this.player_cards_collection[3].manaCost = 0;     
+
+
+        }  else if ( this.current_wave == 6 ) {
+            // Level 7, 50 inmates mix of resources
+            this.player_cards_collection[0].manaCost = 2;
+            this.player_cards_collection[1].manaCost = 0;
+            this.player_cards_collection[2].manaCost = 0;
+            this.player_cards_collection[3].manaCost = 0;               
+
+
+        }  else if ( this.current_wave == 7 ) {
+            // Level 8, 50 inmates mix of resources
+            this.player_cards_collection[0].manaCost = 2;
+            this.player_cards_collection[1].manaCost = 0;
+            this.player_cards_collection[2].manaCost = 10;
+            this.player_cards_collection[3].manaCost = 5;                   
+
+
+        }  else if ( this.current_wave == 8 ) {
+            // Level 9, 50 inmates mix of resources
+            this.player_cards_collection[0].manaCost = 1;
+            this.player_cards_collection[1].manaCost = 0;
+            this.player_cards_collection[2].manaCost = 15;
+            this.player_cards_collection[3].manaCost = 5;               
+
+        }  else if ( this.current_wave == 9 ) {
+            // Level 10, 50 inmates mix of resources
+            this.player_cards_collection[0].manaCost = 10;
+            this.player_cards_collection[1].manaCost = 50;
+            this.player_cards_collection[2].manaCost = 50;
+            this.player_cards_collection[3].manaCost = 50;               
+        }   
+
+
+
+
+
+
 
         let i; 
         for ( i = 0 ; i < this.player_cards_collection.length ; i++ ) {
@@ -1990,7 +2174,7 @@ export class Txstage extends Entity {
 
     //--------
     //
-    public preload_glb_list = ["inmate", "zombieinmate"];
+    public preload_glb_list = ["inmate", "zombieinmate","rangerinmate"];
 
     preload_glb() {
 
@@ -3242,6 +3426,24 @@ export class Txstage extends Entity {
             aggrorange  = 1.0;
 
             speed       = 10;
+
+
+         } else if ( type == "rangerinmate" ) {
+
+
+            y            = 1.6;
+            modelsize   = 0.15;
+            b2dsize     = 0.15;
+            model       = resources.models.rangerinmate;
+
+            damage      = 200;
+            maxhp       = 1500;
+            attackSpeed = 30;
+            aggrorange  = 2.0;
+
+            speed       = 10;    
+            attackRange = 3.0;
+            projectile_user = 1;
 
 
         

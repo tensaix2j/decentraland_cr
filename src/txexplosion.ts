@@ -199,7 +199,7 @@ export class Txexplosion extends Entity {
 								let checklivingthing = 1;
 								if ( this.type == 3 ) {
 									checklivingthing = 0;
-									if ( u != null && u.type == "inmate"  ) {
+									if ( u != null && ( u.type == "inmate" || u.type == "rangerinmate" )  ) {
 										checklivingthing = 1;
 									}
 								}
@@ -268,7 +268,7 @@ export class Txexplosion extends Entity {
 
 			} else if ( this.type == 1 ) {
 
-				if ( attacktarget.type == "zombieinmate" || attacktarget.type == "inmate" ) {
+				if ( attacktarget.type == "zombieinmate" || attacktarget.type == "inmate" || attacktarget.type == "rangerinmate" ) {
 					if ( attacktarget.type == "zombieinmate" ) {
 						this.parent.sounds["zombiedie"].playOnce();
 					} else {

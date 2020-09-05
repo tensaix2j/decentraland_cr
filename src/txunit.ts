@@ -328,9 +328,11 @@ export class Txunit extends Entity {
 
 							if ( this.type == "zombieinmate" || this.rage == 3 ) {
 
-								if ( this.type == "inmate" && this.rage == 3 ) {
+								if ( ( this.type == "inmate" || this.type == "rangerinmate" ) && this.rage == 3 ) {
+									// On fire
 									this.curhp -= 0.2;
 								} else {
+									// Zombie 
 									this.curhp -= 1;
 								}
 								
@@ -421,8 +423,13 @@ export class Txunit extends Entity {
 
 			let u = this.units_in_proximity[i];
 			if ( u != null && u.dead == 0 && u.owner != this.owner && u.type == "zombieinmate" ) {
-				this.rage = 2;
-				this.isPanic = 100;
+
+				if ( this.type == "inmate" ) {
+					this.rage = 2;
+					this.isPanic = 100;
+				} else if ( this.type == "rangerinmate" ) {
+					this.rage = 1;
+				}
 			}
 		}
 	}
@@ -437,18 +444,7 @@ export class Txunit extends Entity {
 			let u = this.units_in_proximity[i];
 			if ( u != null && u.dead == 0 &&  u.fire == null ) {
 				
-				if ( u.type == "inmate" || u.type == "zombieinmate" ) {
-
-					/*
-					if ( u.type == "zombieinmate" ) {
-						this.parent.sounds["zombiedie"].playOnce();
-					} else {
-						this.parent.sounds["scream"].playOnce();
-					}
-					u.setOnFire();
-					*/
-				} else if ( u.type == "oilbarrel" ) {
-					
+				if ( u.type == "oilbarrel" ) {
 					u.die();
 				}
 			}
@@ -463,7 +459,7 @@ export class Txunit extends Entity {
 		// Dead ones, move to below 
 		if ( this.dead == 1 ) {
 
-			if ( this.haszombievirus == 1  && this.type == "inmate" ) {
+			if ( this.haszombievirus == 1  && ( this.type == "inmate" || this.type == "rangerinmate" ) ) {
 
 				let u = this.parent.createUnit( "zombieinmate" , this.transform.position.x,  this.transform.position.z, 1 , 0) ;
 				u.transform.rotation.eulerAngles = this.transform.rotation.eulerAngles ;
@@ -554,7 +550,7 @@ export class Txunit extends Entity {
 	    		var deg  = rad * 180.0 / Math.PI ;
 	    		
 	    		let use_speed = this.speed; 
-	    		if ( this.type == "inmate" && this.rage >= 2 ) {
+	    		if ( ( this.type == "inmate" || this.type == "rangerinmate" ) && this.rage >= 2 ) {
 	    			use_speed = 1.6 * this.speed;
 	    		}
 	    		var delta_x = use_speed * dt * Math.sin(rad);
@@ -738,7 +734,7 @@ export class Txunit extends Entity {
 			if ( this.shapetype == "static" ) {
 				this.parent.sounds["destruction"].playOnce();
 			} else {
-				if ( this.type == "knight" || this.type == "prince" || this.type == "archer" || this.type == "wizard" || this.type == "giant" || this.type == "inmate" ) {
+				if ( this.type == "knight" || this.type == "prince" || this.type == "archer" || this.type == "wizard" || this.type == "giant" || this.type == "inmate" || this.type == "rangerinmate" ) {
 					this.parent.sounds["scream"].playOnce();
 				} else if ( this.type == "zombieinmate" ) {
 				
@@ -998,8 +994,8 @@ export class Txunit extends Entity {
 				//log( this.type, this.id , " kills " , this.attacktarget.type, this.attacktarget.id );
 					
 				// X percent chance to infect	
-				if ( this.type == "zombieinmate" && this.attacktarget.type == "inmate" ) {
-					if ( Math.random() > 0.3 ) {
+				if ( this.type == "zombieinmate" && ( this.attacktarget.type == "inmate" || this.attacktarget.type == "rangerinmate" ) ) {
+					if ( Math.random() > 0.5 ) {
 						this.attacktarget.haszombievirus = 1;
 					}
 				}

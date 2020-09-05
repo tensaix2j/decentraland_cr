@@ -21,7 +21,8 @@ export default {
 		ground: new GLTFShape("models/ground.glb"),
 		inmate: new GLTFShape("models/inmate.glb"),
 		zombieinmate: new GLTFShape("models/zombieinmate.glb"),
-		oilbarrel: new GLTFShape("models/oilbarrel.glb")
+		oilbarrel: new GLTFShape("models/oilbarrel.glb"),
+		rangerinmate: new GLTFShape("models/rangerinmate.glb")
 	},
 	textures: {
 		skeleton: new Texture("models/skeleton_ui.png"),
@@ -96,15 +97,16 @@ export default {
 		welcome:new AudioClip("sounds/welcome.mp3"),
 		success:new AudioClip("sounds/success.mp3"),
 		missionfailed:new AudioClip("sounds/missionfailed.mp3"),
-		gameover:new AudioClip("sounds/gameover.mp3")
+		gameover:new AudioClip("sounds/gameover.mp3"),
+		applause:new AudioClip("sounds/applause.mp3")
 	},
 
 
 	texts: {
 		spell_virus: "Zombie Virus:\nContagious virus that can turn human into zombie.\n\nTo use, click on a tile, nearby human subjects \nwithin 1.5 tile of radius will be infected and turn into zombies.\nZombies will attack other human subjects randomly\nand have 50% chance of turning others into Zombies.\nA zombie has 15 seconds lifespan",
 		emptyblock: "Empty Block.\nUseful for blocking.\nDeployment: 1x1 Tile",
-		oilbarrel: "Oil Barrel\nWill explode if ignited.\nDeployment: 1x1 Tile",
-		spell_fire:"Fire Blast\nSmall area combustion that ignites\nnearby human subjects or oilbarrels.\nRadius:1.2 tile"
+		oilbarrel: "Oil Barrel\nWill explode if ignited.\nDeployment: 1x1 Tile\nExplosion radius 2.5 tiles",
+		spell_fire:"Fire Blast\nSmall area combustion that ignites\nnearby human subjects or oilbarrels.\nRadius:1.2 tile\nClick at the floor to set fire."
 		arrowtrap: "Shoots arrow when triggered.\nDeployment:1x1 Tile"
 	}
 
