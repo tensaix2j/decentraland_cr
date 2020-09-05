@@ -506,9 +506,31 @@ export class Txunit extends Entity {
 		
 		if ( this.walking_queue.length == 0 ) {
 
-			let rx = Math.random() * 12 - 6;
-			let rz = Math.random() * 12 - 6;
+			// if multiplayer, then let host do the randomization..
+			if ( this.parent.game_mode == 1 || this.parent.isClient == 0 ) {
+
+				let rx = Math.random() * 12 - 6;
+				let rz = Math.random() * 12 - 6;
+				this.walking_queue.push( new Vector3( rx , 0 , rz ) ) ;
+
+				if ( this.parent.game_mode == 2 ) {
+					this.parent.unit_on_find_move_target( this.id , this.transform.position.x, this.transform.position.z , rx, rz ) ;
+				}
+			}
+		}
+	}
+
+	//--------------
+	host_request_move_target( cur_x, cur_z, rx , rz ) {
+
+		if ( this.parent.game_mode == 2 ) {
+			
+			this.box2dbody.SetPosition( new b2Vec2( cur_x, cur_z ) ;
+			this.updatePosition_toBox2d() ;
+
+			this.walking_queue.length = 0;
 			this.walking_queue.push( new Vector3( rx , 0 , rz ) ) ;
+			this.prevtilepostick = 0;
 		}
 	}
 
@@ -572,12 +594,19 @@ export class Txunit extends Entity {
 
 				if ( this.prevtilepostick > 100 ) {
 					
+					// If multiplayer, let host do the randomization.
+					if ( this.parent.game_mode == 1 || this.parent.isClient == 0 ) {
+						delta_x = Math.sin(rad + Math.PI/4 * Math.random()*4  ) * 5 ;
+		    			delta_z = Math.cos(rad + Math.PI/4 * Math.random()*4 )  * 5;
+		    			this.walking_queue.length = 0;
+		    			this.walking_queue.push( new Vector3( delta_x, 0 , delta_z ) );
+		    			this.prevtilepostick = 0;
 
-					delta_x = Math.sin(rad + Math.PI/4 * Math.random()*4  ) * 5 ;
-		    		delta_z = Math.cos(rad + Math.PI/4 * Math.random()*4 )  * 5;
-		    		this.walking_queue.length = 0;
-		    		this.walking_queue.push( new Vector3( delta_x, 0 , delta_z ) );
-		    		this.prevtilepostick = 0;
+		    			if ( this.parent.game_mode == 2 ) {
+							this.parent.unit_on_find_move_target( this.id ,  this.transform.position.x, this.transform.position.z , delta_x, delta_z ) ;
+						}
+		    		}
+
 				} else {
 				
 					this.box2dbody.SetLinearVelocity( new b2Vec2( delta_x ,delta_z ) );
@@ -612,6 +641,7 @@ export class Txunit extends Entity {
 	}
 
 
+	
 
 
 	//----------------------
@@ -689,15 +719,14 @@ export class Txunit extends Entity {
 
 		if ( this.parent.game_state == 1 ) {
 
-			
-			
-
-
 			this.dead = 1;
 			this.deadtick = 0;
 			this.parent.world.DestroyBody( this.box2dbody );
-			this.parent.unit_on_die( this );
 
+
+			if ( this.parent.game_mode == 2 && this.parent.isClient == 0 ) {
+				this.parent.unit_on_die( this );
+			}
 
 			this.stopAllClips();
 			this.playAnimation("Die", 0 );
@@ -725,9 +754,17 @@ export class Txunit extends Entity {
 	    			0
 	    		);
 	    		
-	    		this.dead = 2;
+	    		let tile_x = Math.round( ( this.box2dbody.GetPosition().x  ) / this.parent.grid_size_x ) >> 0 ;
+				let tile_z = Math.round( ( this.box2dbody.GetPosition().y  ) / this.parent.grid_size_z ) >> 0 ;
+				let node = this.parent.pathfinder.getNode( tile_x, tile_z );
+				if ( node != null ) {
+            		node["walkable"] = 1;
+            	}
+
+            	this.dead = 2;
 				this.hide();
 
+				
 			}
 				
 
@@ -995,8 +1032,20 @@ export class Txunit extends Entity {
 					
 				// X percent chance to infect	
 				if ( this.type == "zombieinmate" && ( this.attacktarget.type == "inmate" || this.attacktarget.type == "rangerinmate" ) ) {
-					if ( Math.random() > 0.5 ) {
-						this.attacktarget.haszombievirus = 1;
+
+					// let host do the randomization 
+					if ( this.parent.game_mode == 1 || this.parent.isClient == 0 ) {
+
+						let chance_of_infect = Math.random();
+						if ( chance_of_infect > 0.5 ) {
+							this.attacktarget.haszombievirus = 1;
+							
+							if ( this.parent.game_mode == 2  ){
+								this.parent.unit_on_infect_other( this.id, this.attacktarget.id );
+							}
+						}
+						
+
 					}
 				}
 

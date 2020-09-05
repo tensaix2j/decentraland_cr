@@ -98,7 +98,8 @@ export default {
 		success:new AudioClip("sounds/success.mp3"),
 		missionfailed:new AudioClip("sounds/missionfailed.mp3"),
 		gameover:new AudioClip("sounds/gameover.mp3"),
-		applause:new AudioClip("sounds/applause.mp3")
+		applause:new AudioClip("sounds/applause.mp3"),
+		intro:new AudioClip("sounds/intro.mp3")
 	},
 
 
