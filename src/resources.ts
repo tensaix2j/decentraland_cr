@@ -94,7 +94,9 @@ export default {
 		runmeme:new AudioClip("sounds/runmeme.mp3"),
 		attention:new AudioClip("sounds/attention.mp3"),
 		welcome:new AudioClip("sounds/welcome.mp3"),
-		success:new AudioClip("sounds/success.mp3")
+		success:new AudioClip("sounds/success.mp3"),
+		missionfailed:new AudioClip("sounds/missionfailed.mp3"),
+		gameover:new AudioClip("sounds/gameover.mp3")
 	},
 
 

@@ -193,8 +193,18 @@ export class Txexplosion extends Entity {
 							for ( i = 0 ; i < this.units_in_proximity.length ; i++ ) {
 
 								let u = this.units_in_proximity[i];
+
+
+								// Spell type3 shd only target inmate.
+								let checklivingthing = 1;
+								if ( this.type == 3 ) {
+									checklivingthing = 0;
+									if ( u != null && u.type == "inmate"  ) {
+										checklivingthing = 1;
+									}
+								}
 								
-								if ( u != null && u.dead == 0  ) {
+								if ( u != null && u.dead == 0 && checklivingthing == 1 ) {
 									
 									let diff_x = u.transform.position.x - this.transform.position.x;
 									let diff_z = u.transform.position.z - this.transform.position.z;
@@ -202,7 +212,7 @@ export class Txexplosion extends Entity {
 									let hypsqr = diff_x * diff_x + diff_z * diff_z;
 
 									let radius = this.transform.scale.x / 2;
-									
+
 
 									if ( hypsqr <= radius * radius ) {
 										this.inflict_damage( u );

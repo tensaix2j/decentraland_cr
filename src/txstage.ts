@@ -138,7 +138,8 @@ export class Txstage extends Entity {
 
     public difficulty = 0.1;
 
-    
+
+    public time_start     = 0;    
     public time_remaining = this.level_initial_time;
     
 
@@ -261,13 +262,14 @@ export class Txstage extends Entity {
     debug( ) {
 
 
-        this.debugsetting = 0;
+        this.debugsetting = 1;
 
 
 
         if ( this.debugsetting == 1 ) {
 
-            
+            /*
+                
             let i, j;
               
             this.game_state = 1;
@@ -296,7 +298,7 @@ export class Txstage extends Entity {
             this.fill_player_cards_selected();
             this.rearrange_cards_selected();
             this.update_button_ui();
-
+            */
 
 
         }
@@ -432,34 +434,43 @@ export class Txstage extends Entity {
 
         if ( this.game_state == 1 ) {
             
-            this.tick += 1 ;
-            
-            if ( this.tick > 30 ) {
-                this.tick = 0 ;
+            if ( this.time_start == 1 ) {
+                
+                this.tick += 1 ;
+                
+                if ( this.tick > 30 ) {
+                    this.tick = 0 ;
 
 
+                    if ( this.time_remaining > 0 ) {
+                        this.time_remaining -= 1;
+                    } 
+                }
+
+                this.uitxt_time.value = "Time Remaining : " + this.format_timeremaining();  
+                
                 if ( this.time_remaining > 0 ) {
-                    this.time_remaining -= 1;
+                    let alive_inmates = this.count_remaining_inmates();
+                    if ( alive_inmates == 0 ) {
+                        this.level_complete();
+                    }
                 } else {
-
+                    this.level_failed();
                 }
             }
-
-            let minutes_rem = (this.time_remaining / 60 ) >> 0;
-            let seconds_rem = this.time_remaining % 60;
-
-            let zeropad = ""
-            if ( (seconds_rem).toString().length == 1 ) {
-                zeropad = "0";
-            }
-            this.uitxt_time.value = "Time Remaining : " + minutes_rem + ":" + zeropad +  seconds_rem 
-                    
-            
-            let alive_inmates = this.count_remaining_inmates();
-            if ( alive_inmates == 0 ) {
-                this.level_complete();
-            }
         }
+    }
+
+    format_timeremaining() {
+
+        let minutes_rem = (this.time_remaining / 60 ) >> 0;
+        let seconds_rem = this.time_remaining % 60;
+
+        let zeropad = ""
+        if ( (seconds_rem).toString().length == 1 ) {
+            zeropad = "0";
+        }
+        return  minutes_rem + ":" + zeropad +  seconds_rem ;
     }
 
 
@@ -725,15 +736,12 @@ export class Txstage extends Entity {
 
             // E button
         	if ( this.debugsetting == 1 ) {
-                this.playerindex = 1;
+                this.kill_all_units();
             }
 
         } else if ( e.buttonId == 2 ) {
         	// F button 	
         	
-            if ( this.debugsetting == 1 ) {
-                this.playerindex = -1;
-            }
         }	
      }
 
@@ -883,12 +891,33 @@ export class Txstage extends Entity {
             
 
             this.animate_button_callback_id = "battlebegin";
-            this.animate_button_tick = 100;
-            //this.uiimg_redflag.visible = true;
-            //this.uiimg_blueflag.visible = true;
-            this.uitxt_instruction.value = "Level 1: Start.";
+            this.animate_button_tick = 150;
+
+            let cur_level = this.current_wave + 1;
+            this.uitxt_instruction.value = "LEVEL " + cur_level + " Loading.\n Please Standby...";
             this.sounds["attention"].playOnce();
+
+            this.init_resources_by_level();
+
+            this.time_remaining = this.timeduration_by_level();
+
+
+            this.menu_labels["lbl1"].getComponent(TextShape).value =  "LEVEL " + cur_level + ":\n\n";
+            this.menu_labels["lbl1"].getComponent(TextShape).value += "Objective: Eliminate All Human Test Subjects\n\n";
+            this.menu_labels["lbl1"].getComponent(TextShape).value += this.inmate_count_by_level() + " Human Subjects\n\n";
+            this.menu_labels["lbl1"].getComponent(TextShape).value += "Time: " + this.format_timeremaining()  + "\n";
+
+            let i; 
+            for ( i = 0 ; i < this.player_cards_collection.length ; i++ ) {
+                let txcard = this.player_cards_collection[i];
+                this.menu_labels["lbl1"].getComponent(TextShape).value += txcard.description + " x " + txcard.manaCost + "\n" ; 
+            }
+
+            this.menu_labels["lbl1"].getComponent(Transform).position.y = 2.8;
             
+            
+            
+                
 
 
         } else if ( id == "multiplayer" ) {
@@ -983,18 +1012,15 @@ export class Txstage extends Entity {
                
                 this.menu_page = 2;
                 this.update_button_ui();
-
-
-                
                 this.animate_button_callback_id = "battlebegin";
                 this.animate_button_tick = 40;
-
-                this.uiimg_redflag.visible = true;
-                this.uiimg_blueflag.visible = true;
                 this.uitxt_instruction.value = "Start";
                 
 
             }
+
+
+       
 
         } else if ( id == "battlebegin" ) {
 
@@ -1007,11 +1033,8 @@ export class Txstage extends Entity {
 
             this.update_button_ui();
             
-
-           
-            
-            this.init_resources_by_level();
-                
+            this.init_inmates( this.inmate_count_by_level() );
+            this.time_start  = 1;    
                     
 
         } else if ( id == "leavegame" ) {
@@ -1095,6 +1118,8 @@ export class Txstage extends Entity {
             this.uitxt_instruction.value = "";
 
 
+
+            this.menu_labels["lbl1"].getComponent(Transform).position.y = 4.25;
             this.menu_labels["lbl2"].getComponent(Transform).position.y = 2.5;
             this.menu_labels["lbl2"].getComponent(Transform).scale.setAll(0.23);
             
@@ -1470,7 +1495,7 @@ export class Txstage extends Entity {
     // Bookmark endgame
     endgame( ) {
     
-    
+        this.time_start  = 0;
         this.game_state = 2;
         let final_txt = "Game Over.\n";
 
@@ -1483,27 +1508,31 @@ export class Txstage extends Entity {
     }
 
 
-
+    //--------------------
     level_complete() {
 
-
+        this.time_start  = 0;
         this.sounds["success"].playOnce();
-
-        this.game_state = 3;
-        this.update_button_ui();
+        this.animate_button_callback_id = "singleplayer";
+        this.animate_button_tick = 100;
+        this.uitxt_instruction.value = "LEVEL COMPLETED!"
 
         this.reset_level();
-        this.init_resources_by_level();
 
-        this.animate_button_callback_id = "battlebegin";
-        this.animate_button_tick = 100;
-        //this.uiimg_redflag.visible = true;
-        //this.uiimg_blueflag.visible = true;
         this.current_wave += 1;
-        this.uitxt_instruction.value = "Level " + (this.current_wave + 1);
-            
-        this.sounds["attention"].playOnce();
-       
+
+    }
+    //----
+    level_failed() {
+        
+        this.time_start = 0;
+        this.sounds["missionfailed"].playOnce();
+        this.sounds["gameover"].playOnce();
+        
+        this.uitxt_instruction.value = "LEVEL FAILED!\nLeave The Game Now."
+        this.reset_level();
+        this.game_state = 2;
+
     }
 
 
@@ -1742,7 +1771,16 @@ export class Txstage extends Entity {
 
 
 
+    kill_all_units() {
 
+        let i;
+        for ( i = 0 ; i < this.units.length ; i++ ) {
+            let u = this.units[i];
+            if ( u != null && u.dead == 0 && ( u.type == "inmate" || u.type == "zombieinmate" ) )  { 
+                u.die();
+            }
+        }
+    }
 
 
 
@@ -1775,7 +1813,59 @@ export class Txstage extends Entity {
     //
     //---------------
 
+    inmate_count_by_level() {
 
+        let inmate_count = 15;
+        
+        if ( this.current_wave == 1 ) {
+            inmate_count = 30;
+        } else if ( this.current_wave == 2 ) {
+            inmate_count = 5;
+        
+        } else if ( this.current_wave == 3 ) {
+            inmate_count = 40;
+        
+        } else if ( this.current_wave == 4 ) {
+            inmate_count = 50;
+        }  else if ( this.current_wave == 5 ) {
+            inmate_count = 1;
+        
+        } else if ( this.current_wave == 6 ) {
+            inmate_count = 10;
+        }
+
+        return inmate_count;
+    }
+
+    timeduration_by_level() {
+
+        let time_remaining = 300;
+
+        if ( this.current_wave == 1 ) {
+            time_remaining = 300;
+        } else if ( this.current_wave == 2 ) {
+            time_remaining = 60;
+
+        } else if ( this.current_wave == 3 ) {
+            time_remaining = 200;
+        
+        } else if ( this.current_wave == 4 ) {
+            time_remaining = 200;
+        } else if ( this.current_wave == 5 ) {
+            time_remaining = 200;
+        } else if ( this.current_wave == 6 ) {
+            time_remaining = 200;
+        } else if ( this.current_wave == 7 ) {
+            time_remaining = 200;
+        } else if ( this.current_wave == 8 ) {
+            time_remaining = 200;
+        } else if ( this.current_wave == 9 ) {
+            time_remaining = 200;
+        } 
+
+        return time_remaining;
+
+    }
 
     init_resources_by_level() {
 
@@ -1784,33 +1874,27 @@ export class Txstage extends Entity {
         this.player_cards_collection[2].manaCost = 0;
         this.player_cards_collection[3].manaCost = 0;
         
-        let inmate_count = 15;
+        let inmate_count = this.inmate_count_by_level();
 
         if ( this.current_wave == 1 ) {
             
             this.player_cards_collection[1].manaCost = 0;
             this.player_cards_collection[2].manaCost = 10;
             this.player_cards_collection[3].manaCost = 10;
-            inmate_count = 30;
-
+            
 
         }  else if ( this.current_wave >= 2 ) {
 
             this.player_cards_collection[1].manaCost = 5;
             this.player_cards_collection[2].manaCost = 3;
             this.player_cards_collection[3].manaCost = 3;
-            
-            inmate_count = 5;
         }
-
-
 
         let i; 
         for ( i = 0 ; i < this.player_cards_collection.length ; i++ ) {
             this.player_cards_collection[i].refresh_manaCost();
         }
 
-        this.init_inmates( inmate_count );
     }
 
 
@@ -1822,7 +1906,7 @@ export class Txstage extends Entity {
     public all_available_cards_isspell      = [             1  ,           0  ,          0  ,           1  ];
     public all_available_cards_modelname    = [             "" ,          ""  , "oilbarrel" ,          ""   ];
     public all_available_cards_texturename  = [        "virus" , "emptyblock" , "oilbarrel" ,  "spell_fire" ];
-
+    public all_available_cards_desc         = [ "Zombier Virus", "Empty Block", "Oil Barrel", "Fire Blast" ];
      //----
     init_player_cards_collection() {
 
@@ -1870,6 +1954,7 @@ export class Txstage extends Entity {
             let card_mana   = this.all_available_cards_mana[i];
             let modelname   = this.all_available_cards_modelname[i];
             let texturename = this.all_available_cards_texturename[i];
+            let desc        = this.all_available_cards_desc[i];
 
             let txcard = new Txcard(
                 i ,
@@ -1887,7 +1972,7 @@ export class Txstage extends Entity {
             );
 
             txcard.isSpell = this.all_available_cards_isspell[i] ;
-
+            txcard.description = desc;
 
 
             this.player_cards_collection.push( txcard );
