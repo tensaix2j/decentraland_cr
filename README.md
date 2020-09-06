@@ -1,5 +1,6 @@
 This is a game created for Decentraland Game Jam 2020 (Theme: Chain Reaction)
 
+## Homocide Testlab Game Play
 The game mechanic basically utilizes Chain Reaction to achieve the goal of terminating all the human subjects in the containment using the items provided within the time constraint. 
 
 DEMO:
@@ -20,3 +21,9 @@ Flamable object that can explode if being ignited with fire.
 Combustion within a small area that can start to ignite a chain reaction of explosion if flamables are kept around the object.
 
 ![screenshot](https://github.com/tensaix2j/decentraland_cr/blob/master/screenshot/homocide_testlab_ss.png?raw=true)
+
+
+## Acknowledgements
+All sound effects are taken from freesound.org and All Sounds (CC)
+https://creativecommons.org/licenses/by/4.0/
+
