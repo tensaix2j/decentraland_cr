@@ -1,6 +1,6 @@
 This is a game created for Decentraland Game Jam 2020 (Theme: Chain Reaction)
 
-The game mechanics basically revolves around Chain Reaction to achieve the goal of terminating all the human subjects in the containment using the items provided within the time constraint. 
+The game mechanic basically utilizes Chain Reaction to achieve the goal of terminating all the human subjects in the containment using the items provided within the time constraint. 
 
 There are 4 types of items available with different quantities depending on the level difficulties. 
 
