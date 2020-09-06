@@ -11,10 +11,15 @@ https://play.decentraland.org/?position=-55%2C-34
 The game mechanic basically utilizes Chain Reaction to achieve the goal of terminating all the human subjects in the containment using the items provided within the time constraint. 
 
 
+
+
 There are 4 types of items available with different quantities depending on the level difficulties. 
 
 ### 1. Zombie Virus
 Contagious virus that turns humans into zombies. Zombies can then attack other humans and turn more humans into zombies. Hence trigger a chain reaction of Zombie Apocalypse.
+
+
+[![Watch the video](https://img.youtube.com/vi/xWOQzzo3ygQ/hqdefault.jpg)](https://www.youtube.com/watch?v=xWOQzzo3ygQ)
 
 ### 2. Empty Block
 Just an empty block for blocking purposes.
@@ -24,6 +29,9 @@ Flamable object that can explode if being ignited with fire.
 
 ### 4. Fire Blast
 Combustion within a small area that can start to ignite a chain reaction of explosion if flamables are kept around the object.
+
+[![Watch the video](https://img.youtube.com/vi/KUd1umtPviA/hqdefault.jpg)](https://www.youtube.com/watch?v=KUd1umtPviA)
+
 
 
 
