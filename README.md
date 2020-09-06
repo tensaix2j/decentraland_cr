@@ -29,5 +29,3 @@ Combustion within a small area that can start to ignite a chain reaction of expl
 
 ## Acknowledgements
 All sound effects are taken from freesound.org and theallsounds.com 
-(CC) https://creativecommons.org/licenses/by/4.0/
-
