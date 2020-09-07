@@ -64,7 +64,7 @@ export default {
 		spell_virus: "Zombie Virus:\nContagious virus that can turn human into zombie.\n\nTo use, click on a tile, nearby human subjects \nwithin 1.5 tile of radius will be infected and turn into zombies.\nZombies will attack other human subjects randomly\nand have 50% chance of turning others into Zombies.\nA zombie has 15 seconds lifespan",
 		emptyblock: "Empty Block.\nUseful for blocking.\nDeployment: 1x1 Tile",
 		oilbarrel: "Oil Barrel\nWill explode if ignited.\nDeployment: 1x1 Tile\nExplosion radius 2.5 tiles",
-		spell_fire:"Fire Blast\nSmall area combustion that ignites\nnearby human subjects or oilbarrels.\nRadius:1.2 tile\nClick at the floor to set fire."
+		spell_fire:"Fire Blast\nSmall area combustion that ignites\nnearby human subjects or oilbarrels.\nRadius:1.2 tile\nClick at the floor to set fire.",
 		arrowtrap: "Shoots arrow when triggered.\nDeployment:1x1 Tile"
 	}
 
