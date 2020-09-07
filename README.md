@@ -1,6 +1,6 @@
 This is a game created for Decentraland Game Jam 2020 (Theme: Chain Reaction)
 
-## Homocide Testlab
+## Homicide Testlab
 
 ![screenshot](https://github.com/tensaix2j/decentraland_cr/blob/master/screenshot/homocide_testlab_ss.png?raw=true)
 
