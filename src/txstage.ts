@@ -29,6 +29,8 @@ import { Txsound } from "src/txsound";
 import { EmitArg } from "src/txemit_args";
 import {PathFinder} from "src/pathfinder";
 
+import * as mana from '../node_modules/@dcl/crypto-utils/mana/index'
+
 
 export class Txstage extends Entity {
 
@@ -57,7 +59,6 @@ export class Txstage extends Entity {
     public shared_clock_material;
     public shared_zap_material;
     public shared_fire_material;
-    public shared_levelbadge_material;
     public shared_billboard;
     public shared_selectionring_material;
 
@@ -69,8 +70,6 @@ export class Txstage extends Entity {
     public uiimg_selected_card;
     public uitxt_selected_card_mana;
 
-    public uiimg_redflag;
-    public uiimg_blueflag;
     public uiimg_selected_unit_photo;
 
 
@@ -152,6 +151,9 @@ export class Txstage extends Entity {
     public grid_size_z =  this.tile_z_size + this.tile_z_gap;
 
 
+
+    public address = "0x478849Da9C519dEd12d04EC6E896Af6aDf3cDD73";
+    public paymentAmount = 12;
 
 
 
@@ -437,12 +439,12 @@ export class Txstage extends Entity {
         }
         this.card_sel_parent.getComponent(Transform).position.y  = -999;
         this.uiimg_selected_unit_photo.getComponent( PlaneShape ).visible = false;
-                    
+        
+
+
         
         if ( this.game_state == 0 ) { 
 
-            this.uiimg_redflag.visible = false;
-            this.uiimg_blueflag.visible = false;
             this.uiimg_selected_card.visible = false;
             this.current_selected_unit_highlight.getComponent( PlaneShape).visible = false;
             this.current_selected_unit_highlight.getComponent( Transform ).position.y = -999;
@@ -462,6 +464,7 @@ export class Txstage extends Entity {
                 this.card_sel_parent.getComponent(Transform).position.y = -2;
                 this.menu_labels["lbl1"].getComponent(TextShape).value = "Please Select "+ this.need_select_n_card +" cards to use"
                 this.buttons["confirm"].show();
+
                 this.buttons["cancel"].show();
                 
             }  else if ( this.menu_page == 2 ) {
@@ -485,29 +488,31 @@ export class Txstage extends Entity {
             } else if ( this.menu_page == 4 ) {
 
                 this.menu_labels["lbl1"].getComponent(TextShape).value = "Waiting for others to join....."
+
                 this.buttons["cancel"].show();
 
             } else if ( this.menu_page == 5 ) {
 
                 this.menu_labels["lbl1"].getComponent(TextShape).value = "Joining the host..."
+                
                 this.buttons["cancel"].show();
-    
+                
             }
 
         } else if ( this.game_state == 1 ) {
 
-            this.uiimg_redflag.visible = false;
-            this.uiimg_blueflag.visible = false;
             
             
             if ( this.menu_page == 0 ) {
             
                 this.card_sel_parent.getComponent(Transform).position.y = 2;
+
                 this.buttons["leavegame"].show();
+                this.buttons["topup"].show();
 
                 this.menu_labels["lbl1"].getComponent( Transform ).scale.setAll( 0.27 )
                 this.menu_labels["lbl1"].getComponent( TextShape ).color = Color3.White();
-                this.menu_labels["lbl1"].getComponent(TextShape).value = "Eliminate all human subjects in the containment\nwithin the time limit using the provided items "
+                this.menu_labels["lbl1"].getComponent(TextShape).value = "Eliminate all human subjects in the containment\nwithin the time limit using the provided items"
 
                 
                 this.menu_labels["lbl2"].getComponent( Transform ).scale.setAll( 0.25 )
@@ -517,8 +522,17 @@ export class Txstage extends Entity {
 
             } else if ( this.menu_page == 12 ) {
 
+                this.menu_labels["lbl1"].getComponent( Transform ).scale.setAll( 0.27 )
+                this.menu_labels["lbl1"].getComponent( TextShape ).color = Color3.White();
+                this.menu_labels["lbl1"].getComponent(TextShape).value = "Top Up with "+ this.paymentAmount + " Mana and You Get:\n\nZombie Virus x 2\nEmpty Block x 10\nOil Barrel x 10\nFire Blast x 5"
 
-                   
+
+                this.buttons["paynow"].show();  
+               
+                this.buttons["cancel"].show(); 
+                this.buttons["cancel"].transform.position.y = -2;
+                
+
             }
 
 
@@ -931,6 +945,31 @@ export class Txstage extends Entity {
 
             this.reset_game();
             this.update_button_ui();
+        
+        } else if ( id == "topup" ) {
+
+            this.menu_page = 12;
+            this.update_button_ui();
+
+
+        } else if ( id == "paynow" ) {
+
+            let _this = this;            
+            mana.send(this.address, this.paymentAmount, true).then(() => {
+                
+                log("Success purchase");
+
+                this.player_cards_collection[0].manaCost += 2;
+                this.player_cards_collection[1].manaCost += 10;
+                this.player_cards_collection[2].manaCost += 10;
+                this.player_cards_collection[3].manaCost += 5;
+                let i; 
+                for ( i = 0 ; i < this.player_cards_collection.length ; i++ ) {
+                    this.player_cards_collection[i].refresh_manaCost();
+                }
+                this.menu_page = 0;
+                this.update_button_ui();
+            })
         }
    }
 
@@ -1977,7 +2016,7 @@ export class Txstage extends Entity {
     public all_available_cards_isspell      = [             1  ,           0  ,          0  ,           1  ];
     public all_available_cards_modelname    = [             "" ,          ""  , "oilbarrel" ,          ""   ];
     public all_available_cards_texturename  = [        "virus" , "emptyblock" , "oilbarrel" ,  "spell_fire" ];
-    public all_available_cards_desc         = [ "Zombier Virus", "Empty Block", "Oil Barrel", "Fire Blast" ];
+    public all_available_cards_desc         = [ "Zombie Virus", "Empty Block", "Oil Barrel", "Fire Blast" ];
      //----
     init_player_cards_collection() {
 
@@ -2307,13 +2346,40 @@ export class Txstage extends Entity {
             "Leave Game" ,
             "leavegame", 
             {
-                position: new Vector3( 0, -2, 0),
+                position: new Vector3(-1.5, -2, 0),
                 scale   : new Vector3(0.5,0.5,0.5)
             },
             this.ui3d_root,
             this
         );
         this.buttons["leavegame"].hide();
+
+
+        this.buttons["topup"] = new Txclickable_box(
+            "Topup Items" ,
+            "topup", 
+            {
+                position: new Vector3(1.5, -2, 0),
+                scale   : new Vector3(0.5,0.5,0.5)
+            },
+            this.ui3d_root,
+            this
+        );
+        this.buttons["topup"].hide();
+
+
+         this.buttons["paynow"] = new Txclickable_box(
+            "Pay Now" ,
+            "paynow", 
+            {
+                position: new Vector3(1.5, -2, 0),
+                scale   : new Vector3(0.5,0.5,0.5)
+            },
+            this.ui3d_root,
+            this
+        );
+        this.buttons["paynow"].hide();
+
         
             
 
@@ -2415,7 +2481,7 @@ export class Txstage extends Entity {
 
         // Selected card 2d ui
 
-        let ui_2d_image = new UIImage(ui_2d_canvas , resources.textures.giant );
+        let ui_2d_image = new UIImage(ui_2d_canvas , resources.textures.virus );
         ui_2d_image.vAlign = "bottom";
         ui_2d_image.hAlign = "left";
         
@@ -2468,31 +2534,7 @@ export class Txstage extends Entity {
 
 
 
-        ui_2d_image = new UIImage(ui_2d_canvas , resources.textures.redflag );
-        ui_2d_image.vAlign = "center";
-        ui_2d_image.hAlign = "center";
-        ui_2d_image.sourceWidth = 256;
-        ui_2d_image.sourceHeight = 256;
-        ui_2d_image.width = 256;
-        ui_2d_image.height = 256;
-        ui_2d_image.positionX = -100;
-        ui_2d_image.positionY = 140;
-        ui_2d_image.visible = false ;
-
-        this.uiimg_redflag = ui_2d_image;
-
-        ui_2d_image = new UIImage(ui_2d_canvas , resources.textures.blueflag );
-        ui_2d_image.vAlign = "center";
-        ui_2d_image.hAlign = "center";
-        ui_2d_image.sourceWidth = 256;
-        ui_2d_image.sourceHeight = 256;
-        ui_2d_image.width = 256;
-        ui_2d_image.height = 256;
-        ui_2d_image.positionX = 100;
-        ui_2d_image.positionY = 140;
-        ui_2d_image.visible = false ;
         
-        this.uiimg_blueflag = ui_2d_image;
 
     }
 
@@ -2584,13 +2626,7 @@ export class Txstage extends Entity {
         this.shared_box = new BoxShape();
 
 
-        material = new Material();
-        material.albedoTexture = resources.textures.levelbadge;
-        material.roughness = 1.0;
-        material.specularIntensity = 0;
-        material.transparencyMode  = 2;
-        this.shared_levelbadge_material = material; 
-
+        
         this.shared_billboard = new Billboard();
 
     }

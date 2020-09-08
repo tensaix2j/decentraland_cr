@@ -21,7 +21,8 @@ export default {
 		emptyblock: new Texture("models/emptyblock_ui.png"),
 		oilbarrel: new Texture("models/oilbarrel_ui.png"),
 		virus: new Texture("models/virus_ui.png"),
-		selectionring: new Texture("models/selectionring.png")
+		selectionring: new Texture("models/selectionring.png"),
+		zap: new Texture("models/zap.png")
 
 	},
 
