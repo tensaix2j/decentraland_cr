@@ -18,7 +18,7 @@ There are 4 types of items available with different quantities depending on the 
 ### 1. Zombie Virus
 Contagious virus that turns humans into zombies. Zombies can then attack other humans and turn more humans into zombies. Hence trigger a chain reaction of Zombie Apocalypse.
 
-
+Click on the picture to play the video
 [![Watch the video](https://img.youtube.com/vi/xWOQzzo3ygQ/hqdefault.jpg)](https://www.youtube.com/watch?v=xWOQzzo3ygQ)
 
 ### 2. Empty Block
@@ -30,6 +30,7 @@ Flamable object that can explode if being ignited with fire.
 ### 4. Fire Blast
 Combustion within a small area that can start to ignite a chain reaction of explosion if flamables are kept around the object.
 
+Click on the picture to play the video
 [![Watch the video](https://img.youtube.com/vi/KUd1umtPviA/hqdefault.jpg)](https://www.youtube.com/watch?v=KUd1umtPviA)
 
 
