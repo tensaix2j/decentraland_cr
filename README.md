@@ -2,7 +2,7 @@ This is a game created for Decentraland Game Jam 2020 (Theme: Chain Reaction)
 
 ## Homicide Testlab
 
-![screenshot](https://github.com/tensaix2j/decentraland_cr/blob/master/screenshot/homicide_testlab_ss.png.png)
+![screenshot](https://github.com/tensaix2j/decentraland_cr/blob/master/screenshot/homicide_testlab_ss.png)
 
 DEMO:
 https://play.decentraland.org/?position=-55%2C-34
