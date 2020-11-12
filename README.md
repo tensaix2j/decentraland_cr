@@ -21,6 +21,9 @@ Contagious virus that turns humans into zombies. Zombies can then attack other h
 
 [![Watch the video](https://img.youtube.com/vi/xWOQzzo3ygQ/hqdefault.jpg)](https://www.youtube.com/watch?v=xWOQzzo3ygQ)
 
+
+Click on the picture to play the video
+
 ### 2. Empty Block
 Just an empty block for blocking purposes.
 
@@ -32,6 +35,8 @@ Combustion within a small area that can start to ignite a chain reaction of expl
 
 [![Watch the video](https://img.youtube.com/vi/KUd1umtPviA/hqdefault.jpg)](https://www.youtube.com/watch?v=KUd1umtPviA)
 
+
+Click on the picture to play the video
 
 
 
