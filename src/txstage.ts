@@ -29,6 +29,10 @@ import { Txsound } from "src/txsound";
 import { EmitArg } from "src/txemit_args";
 import {PathFinder} from "src/pathfinder";
 
+import {Utils} from "src/utils"
+import { getUserAccount, RPCSendableMessage  } from '@decentraland/EthereumController'
+
+
 import * as mana from '../node_modules/@dcl/crypto-utils/mana/index'
 
 
@@ -458,6 +462,8 @@ export class Txstage extends Entity {
                  this.sounds["welcome"].playOnce();
                 this.sounds["intro"].playOnce();
 
+                 this.displayHighscores();
+
             
             } else if ( this.menu_page == 1  ) {
 
@@ -558,6 +564,69 @@ export class Txstage extends Entity {
 
 
 
+
+    //----------------------
+    displayHighscores() {
+
+        let url = "https://tensaistudio.xyz/homicidetestlab/get_highscore.tcl";
+        let fetchopt = {
+            headers: {
+              'content-type': 'application/json'
+            },
+            method: 'GET'
+        };
+
+        executeTask(async () => {
+            try {
+                let resp = await fetch(url, fetchopt ).then(response => response.json())
+            
+                log("sent request to URL", url , "SUCCESS", resp );
+                let str = "";
+                let i;
+                for ( i = 0 ; i < resp.length ; i++ ) {
+                    str += ( i + 1 ) + "." + " " + resp[i]["username"] + "     " + resp[i]["score"] + "\n";
+                }
+                this.menu_labels["lbl5"].getComponent(TextShape).value = "Highscores"
+                this.menu_labels["lbl6"].getComponent(TextShape).value = str;
+            } catch(err) {
+                log("error to do", url, fetchopt, err );
+            }
+        });
+    }
+
+
+    //----------------------
+    async submitHighscores() {
+
+        let url = "https://tensaistudio.xyz/homicidetestlab/update_highscore.tcl";
+       
+        const myaddress = await getUserAccount()
+        log("myaddress is " , myaddress);
+
+        let username = this.userID;
+        let useraddr = myaddress;
+        let score    = this.current_wave;
+
+        let sig      = Utils.sha256(useraddr + "wibble" + score );
+
+        let fetchopt = {
+            headers: {
+              'content-type': 'application/json'
+            },
+            body: "username="+ username + "&score="+ score + "&useraddr=" + useraddr+ "&sig=" + sig,
+            method: 'POST'
+        };
+        let _this = this;
+        try {
+            let resp = await fetch(url, fetchopt ).then(response => response.text())
+            log("sent request to URL", url , "SUCCESS", resp );
+            _this.displayHighscores();
+
+        } catch(err) {
+            log("error to do", url, fetchopt, err );
+        }
+   
+    }
 
 
 
@@ -1432,6 +1501,9 @@ export class Txstage extends Entity {
         this.game_state = 2;
         let final_txt = "CONGRATULATION. YOU WON!\n";
 
+        this.submitHighscores();
+
+
         final_txt += "\n\nLeave game to restart again";
         this.uitxt_instruction.value = final_txt;
         this.uitxt_time.value = "";
@@ -1499,6 +1571,7 @@ export class Txstage extends Entity {
 
         this.current_wave += 1;
 
+
         if ( this.current_wave < 10 ) {
             this.animate_button_callback_id = "round_start";
         } else {
@@ -1510,6 +1583,9 @@ export class Txstage extends Entity {
         this.uitxt_instruction.value = "LEVEL COMPLETED!"
         this.reset_level();
        
+       this.submitHighscores();
+        
+
     }
 
 
@@ -2130,7 +2206,7 @@ export class Txstage extends Entity {
         this.ui3d_root.setParent( this );
         this.ui3d_root.addComponent( new Transform(
             {   
-                position: new Vector3( 0 , 4.5 , 7.5 )
+                position: new Vector3( -2 , 4.5 , 7.5 )
             }
         ) );
 
@@ -2151,6 +2227,23 @@ export class Txstage extends Entity {
         let material = new Material();
         material.albedoColor = Color3.FromInts(102, 77, 51);
         backboard.addComponent( material );
+
+
+        let backboard2 = new Entity();
+        backboard2.setParent( this.ui3d_root );
+        backboard2.addComponent( new BoxShape() );
+        backboard2.addComponent( new Transform( 
+            {
+                position: new Vector3(-6.2 , 1 , -0.1  ),
+                scale   : new Vector3( 5, 13,  0.1 ) 
+            }
+        ));
+        let material2 = new Material();
+        material2.albedoColor = Color3.FromInts(32, 18, 13);
+        backboard2.addComponent( material2 );
+
+
+
 
         let logo = new Entity();
 
@@ -2275,6 +2368,38 @@ export class Txstage extends Entity {
         this.menu_labels["lbl4"].setParent( this.ui3d_root );
 
         
+
+        // Highscores
+        this.menu_labels["lbl5"] = new Entity();
+        this.menu_labels["lbl5"].addComponent( new TextShape() );
+        this.menu_labels["lbl5"].addComponent( new Transform(
+            {
+                position:new Vector3( -6.2, 6.2 , 0 ),
+                scale   :new Vector3( 0.45, 0.45, 0.45 )
+            }
+        ));
+
+        this.menu_labels["lbl5"].getComponent( TextShape ).color = Color3.White();
+        this.menu_labels["lbl5"].getComponent( Transform ).rotation.eulerAngles = new Vector3(0,180,0);
+        this.menu_labels["lbl5"].setParent( this.ui3d_root );
+
+
+        this.menu_labels["lbl6"] = new Entity();
+        this.menu_labels["lbl6"].addComponent( new TextShape() );
+        this.menu_labels["lbl6"].addComponent( new Transform(
+            {
+                position:new Vector3( -4.5, 5.0 , 0 ),
+                scale   :new Vector3( 0.3, 0.3, 0.3 )
+            }
+        ));
+
+        this.menu_labels["lbl6"].getComponent( TextShape ).color = Color3.White();
+        this.menu_labels["lbl6"].getComponent( Transform ).rotation.eulerAngles = new Vector3(0,180,0);
+        this.menu_labels["lbl6"].setParent( this.ui3d_root );
+        this.menu_labels["lbl6"].getComponent( TextShape ).hTextAlign = "left";
+        this.menu_labels["lbl6"].getComponent( TextShape ).vTextAlign = "top";
+
+
 
         this.init_buttons();
     }   
