@@ -5,7 +5,7 @@ This is a game created for Decentraland Game Jam 2020 (Theme: Chain Reaction)
 ![screenshot](https://github.com/tensaix2j/decentraland_cr/blob/master/screenshot/homicide_testlab_ss.png)
 
 DEMO:
-https://play.decentraland.org/?position=-55%2C-34
+https://play.decentraland.org/?position=-17%2C80
 
 
 The game mechanic basically utilizes Chain Reaction to achieve the goal of terminating all the human subjects in the containment using the items provided within the time constraint. 
